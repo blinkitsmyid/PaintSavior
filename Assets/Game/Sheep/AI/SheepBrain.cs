@@ -311,7 +311,7 @@ namespace Game.Sheep.AI
 
             if (offset.sqrMagnitude <= friendlyDistance * friendlyDistance)
             {
-                SetFriendly(true, "player nearby");
+                SetFriendly(true, "игрок рядом");
             }
         }
 
