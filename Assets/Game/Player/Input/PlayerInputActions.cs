@@ -118,6 +118,60 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Interact"",
+                    ""type"": ""Button"",
+                    ""id"": ""e8f1c56a-88f5-4dc0-a5af-6b9a421d74c9"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""ToggleSlingshot"",
+                    ""type"": ""Button"",
+                    ""id"": ""a8d3a1ce-9f70-4ba0-9baf-4d181fb1e5c6"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""SelectBerry1"",
+                    ""type"": ""Button"",
+                    ""id"": ""d1f0d02d-a2d1-4781-a5a5-9d7f7ccf47d7"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""SelectBerry2"",
+                    ""type"": ""Button"",
+                    ""id"": ""c9a0f56a-6dc5-48bb-80c6-62f8c4ccdb02"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""SelectBerry3"",
+                    ""type"": ""Button"",
+                    ""id"": ""42eb887d-54ab-493f-90b7-a0c76a764d8a"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""CancelAim"",
+                    ""type"": ""Button"",
+                    ""id"": ""b7a46ca1-5b6c-4c4a-97a2-7a2c29d3d04c"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -197,6 +251,105 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""action"": ""Shoot"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""ccf3a0db-e733-4b6d-bdb4-5c64f25b5d1e"",
+                    ""path"": ""<Keyboard>/e"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Interact"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""b5b3e7e1-26e8-4e26-b4b4-74a7d0a45c3c"",
+                    ""path"": ""<Keyboard>/q"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ToggleSlingshot"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""0d8bbcb5-13b5-4bea-a2e5-1bb7a770ba88"",
+                    ""path"": ""<Keyboard>/1"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""SelectBerry1"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""Numpad 1"",
+                    ""id"": ""f9cc7e38-e2f0-42f8-a502-25c3cfc69215"",
+                    ""path"": ""<Keyboard>/numpad1"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""SelectBerry1"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""7e5ba72d-c9ae-4c72-bab1-6345ed3f2c63"",
+                    ""path"": ""<Keyboard>/2"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""SelectBerry2"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""Numpad 2"",
+                    ""id"": ""ee2bcb55-b3cc-4e11-95d5-63b7cf3d72ae"",
+                    ""path"": ""<Keyboard>/numpad2"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""SelectBerry2"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""9fa3d46b-644b-4d7a-b5c4-fc49e7fa72b8"",
+                    ""path"": ""<Keyboard>/3"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""SelectBerry3"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""Numpad 3"",
+                    ""id"": ""4ed58a6f-3d06-4b2c-b115-0b21e5ae5800"",
+                    ""path"": ""<Keyboard>/numpad3"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""SelectBerry3"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""0ab1f28a-8e72-4f0e-b3d7-4e4d6e236f11"",
+                    ""path"": ""<Mouse>/rightButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""CancelAim"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -208,6 +361,12 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         m_Player_Move = m_Player.FindAction("Move", throwIfNotFound: true);
         m_Player_Look = m_Player.FindAction("Look", throwIfNotFound: true);
         m_Player_Shoot = m_Player.FindAction("Shoot", throwIfNotFound: true);
+        m_Player_Interact = m_Player.FindAction("Interact", throwIfNotFound: true);
+        m_Player_ToggleSlingshot = m_Player.FindAction("ToggleSlingshot", throwIfNotFound: true);
+        m_Player_SelectBerry1 = m_Player.FindAction("SelectBerry1", throwIfNotFound: true);
+        m_Player_SelectBerry2 = m_Player.FindAction("SelectBerry2", throwIfNotFound: true);
+        m_Player_SelectBerry3 = m_Player.FindAction("SelectBerry3", throwIfNotFound: true);
+        m_Player_CancelAim = m_Player.FindAction("CancelAim", throwIfNotFound: true);
     }
 
     ~@PlayerInputActions()
@@ -291,6 +450,12 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Move;
     private readonly InputAction m_Player_Look;
     private readonly InputAction m_Player_Shoot;
+    private readonly InputAction m_Player_Interact;
+    private readonly InputAction m_Player_ToggleSlingshot;
+    private readonly InputAction m_Player_SelectBerry1;
+    private readonly InputAction m_Player_SelectBerry2;
+    private readonly InputAction m_Player_SelectBerry3;
+    private readonly InputAction m_Player_CancelAim;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -314,6 +479,30 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Player/Shoot".
         /// </summary>
         public InputAction @Shoot => m_Wrapper.m_Player_Shoot;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/Interact".
+        /// </summary>
+        public InputAction @Interact => m_Wrapper.m_Player_Interact;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/ToggleSlingshot".
+        /// </summary>
+        public InputAction @ToggleSlingshot => m_Wrapper.m_Player_ToggleSlingshot;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/SelectBerry1".
+        /// </summary>
+        public InputAction @SelectBerry1 => m_Wrapper.m_Player_SelectBerry1;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/SelectBerry2".
+        /// </summary>
+        public InputAction @SelectBerry2 => m_Wrapper.m_Player_SelectBerry2;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/SelectBerry3".
+        /// </summary>
+        public InputAction @SelectBerry3 => m_Wrapper.m_Player_SelectBerry3;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/CancelAim".
+        /// </summary>
+        public InputAction @CancelAim => m_Wrapper.m_Player_CancelAim;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -349,6 +538,24 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @Shoot.started += instance.OnShoot;
             @Shoot.performed += instance.OnShoot;
             @Shoot.canceled += instance.OnShoot;
+            @Interact.started += instance.OnInteract;
+            @Interact.performed += instance.OnInteract;
+            @Interact.canceled += instance.OnInteract;
+            @ToggleSlingshot.started += instance.OnToggleSlingshot;
+            @ToggleSlingshot.performed += instance.OnToggleSlingshot;
+            @ToggleSlingshot.canceled += instance.OnToggleSlingshot;
+            @SelectBerry1.started += instance.OnSelectBerry1;
+            @SelectBerry1.performed += instance.OnSelectBerry1;
+            @SelectBerry1.canceled += instance.OnSelectBerry1;
+            @SelectBerry2.started += instance.OnSelectBerry2;
+            @SelectBerry2.performed += instance.OnSelectBerry2;
+            @SelectBerry2.canceled += instance.OnSelectBerry2;
+            @SelectBerry3.started += instance.OnSelectBerry3;
+            @SelectBerry3.performed += instance.OnSelectBerry3;
+            @SelectBerry3.canceled += instance.OnSelectBerry3;
+            @CancelAim.started += instance.OnCancelAim;
+            @CancelAim.performed += instance.OnCancelAim;
+            @CancelAim.canceled += instance.OnCancelAim;
         }
 
         /// <summary>
@@ -369,6 +576,24 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @Shoot.started -= instance.OnShoot;
             @Shoot.performed -= instance.OnShoot;
             @Shoot.canceled -= instance.OnShoot;
+            @Interact.started -= instance.OnInteract;
+            @Interact.performed -= instance.OnInteract;
+            @Interact.canceled -= instance.OnInteract;
+            @ToggleSlingshot.started -= instance.OnToggleSlingshot;
+            @ToggleSlingshot.performed -= instance.OnToggleSlingshot;
+            @ToggleSlingshot.canceled -= instance.OnToggleSlingshot;
+            @SelectBerry1.started -= instance.OnSelectBerry1;
+            @SelectBerry1.performed -= instance.OnSelectBerry1;
+            @SelectBerry1.canceled -= instance.OnSelectBerry1;
+            @SelectBerry2.started -= instance.OnSelectBerry2;
+            @SelectBerry2.performed -= instance.OnSelectBerry2;
+            @SelectBerry2.canceled -= instance.OnSelectBerry2;
+            @SelectBerry3.started -= instance.OnSelectBerry3;
+            @SelectBerry3.performed -= instance.OnSelectBerry3;
+            @SelectBerry3.canceled -= instance.OnSelectBerry3;
+            @CancelAim.started -= instance.OnCancelAim;
+            @CancelAim.performed -= instance.OnCancelAim;
+            @CancelAim.canceled -= instance.OnCancelAim;
         }
 
         /// <summary>
@@ -430,5 +655,47 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnShoot(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Interact" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnInteract(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "ToggleSlingshot" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnToggleSlingshot(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "SelectBerry1" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnSelectBerry1(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "SelectBerry2" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnSelectBerry2(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "SelectBerry3" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnSelectBerry3(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "CancelAim" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnCancelAim(InputAction.CallbackContext context);
     }
 }

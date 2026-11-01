@@ -516,7 +516,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 1.14, z: 3.461}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.81, y: 1.85, z: 1.85}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
@@ -1163,8 +1163,8 @@ Transform:
   m_GameObject: {fileID: 1219377528}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.58, z: 0.01}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0.98325, y: -0.58, z: -3.8493}
+  m_LocalScale: {x: 1.8455788, y: 1.8455788, z: 1.8455788}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -1745,6 +1745,10 @@ GameObject:
   - component: {fileID: 2115523593}
   - component: {fileID: 2115523595}
   - component: {fileID: 2115523594}
+  - component: {fileID: 2115523596}
+  - component: {fileID: 2115523597}
+  - component: {fileID: 2115523598}
+  - component: {fileID: 2115523599}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -1916,7 +1920,74 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c9713a3fc32c4cd4abf4d07b093ead56, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.Player.PlayerEquipment
-  startWithPaintGun: 1
+  startWithPaintGun: 0
+--- !u!114 &2115523596
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2115523587}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 960438b7f6da7dd46ad4af345d1c5203, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Items.BerryInventory
+  redCapacity: 3
+  blueCapacity: 3
+  yellowCapacity: 3
+  startingRedAmount: 0
+  startingBlueAmount: 0
+  startingYellowAmount: 0
+--- !u!114 &2115523597
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2115523587}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3975753b1f7b1044bb436565b270d09, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Items.BerryInventoryDebugView
+  inventory: {fileID: 2115523596}
+  screenPosition: {x: 20, y: 20}
+  fontSize: 18
+  lineHeight: 24
+  labelWidth: 240
+--- !u!114 &2115523598
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2115523587}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d62438c2e9b8dd64cbfdfd39ff051aaf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Player.PlayerBerryInteractor
+  playerCamera: {fileID: 886021875}
+  berryInventory: {fileID: 2115523596}
+  interactionDistance: 3
+  interactionMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+--- !u!114 &2115523599
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2115523587}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e7d6f4bf8e6d49a2a4cb1fbcf1a6d9b7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Player.BerrySelectionController
+  inventory: {fileID: 2115523596}
+  equipment: {fileID: 2115523595}
 --- !u!1001 &6874499992147611062
 PrefabInstance:
   m_ObjectHideFlags: 0
