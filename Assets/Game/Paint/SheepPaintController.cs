@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Game.Paint
 {
-    public sealed class SheepPaintController : MonoBehaviour
+    public sealed class SheepPaintController : MonoBehaviour, IPaintReceiver
     {
         [Header("Paint")]
         [SerializeField] private int maxBlobsPerSide = 8;
@@ -24,6 +24,27 @@ namespace Game.Paint
         public event Action AllSidesPainted;
 
         public IReadOnlyList<PaintBlobData> BlobsInOrder => _blobsInOrder;
+
+        /// <summary>
+        /// Преобразует универсальное попадание в текущий контракт покраски овцы.
+        /// </summary>
+        public void ReceivePaint(
+            PaintImpactData impact)
+        {
+            PaintHit hit =
+                new PaintHit(
+                    SheepSide.Left,
+                    impact.WorldPosition,
+                    impact.Normal,
+                    impact.UV,
+                    impact.SourcePosition
+                );
+
+            ApplyPaint(
+                hit,
+                impact.Color
+            );
+        }
 
         /// <summary>
         /// Инициализирует состояния сторон и подготавливает коллайдер поверхности для попаданий по UV меша.

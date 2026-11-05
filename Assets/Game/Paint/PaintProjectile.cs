@@ -12,6 +12,9 @@ namespace Game.Paint
 
         [Header("Hit Detection")]
         [SerializeField] private float castRadius = 0.08f;
+        [SerializeField] private LayerMask collisionMask = ~0;
+        [SerializeField] private GameObject impactEffectPrefab;
+        [SerializeField, Min(0.1f)] private float impactEffectLifetime = 2f;
 
         private float _lifeTimer;
         private float _currentSpeed;
@@ -119,11 +122,11 @@ namespace Game.Paint
                 direction,
                 HitBuffer,
                 distance,
-                Physics.DefaultRaycastLayers,
-                QueryTriggerInteraction.Collide
+                collisionMask,
+                QueryTriggerInteraction.Ignore
             );
 
-            if (TryGetPaintSurfaceHit(hitCount, out RaycastHit hit))
+            if (TryGetNearestCollision(hitCount, out RaycastHit hit))
             {
                 HandleHit(hit);
                 return;
@@ -154,47 +157,78 @@ namespace Game.Paint
         }
 
         /// <summary>
-        /// Передаёт подтверждённое попадание контроллеру покраски овцы и удаляет снаряд.
+        /// Передаёт подтверждённое попадание найденному получателю краски и удаляет снаряд.
         /// </summary>
         private void HandleHit(RaycastHit hit)
         {
-            SheepPaintController controller =
-                hit.collider.GetComponentInParent<SheepPaintController>();
+            SpawnImpactEffect(hit);
 
-            if (controller == null || hit.collider is not MeshCollider)
+            IPaintReceiver receiver =
+                hit.collider.GetComponentInParent(
+                    typeof(IPaintReceiver)
+                ) as IPaintReceiver;
+
+            if (receiver == null)
             {
                 Destroy(gameObject);
                 return;
             }
 
-            Vector2 paintUV = hit.textureCoord;
+            Vector2 paintUV =
+                hit.collider is MeshCollider
+                    ? hit.textureCoord
+                    : Vector2.zero;
 
-            PaintHit paintHit = new PaintHit(
-                SheepSide.Left,
-                hit.point,
-                hit.normal,
-                paintUV,
-                _sourcePosition
-            );
+            PaintImpactData impact =
+                new PaintImpactData(
+                    hit.point,
+                    hit.normal,
+                    paintUV,
+                    _color,
+                    _sourcePosition,
+                    hit.collider
+                );
 
-            Debug.Log(
-                $"Hit: {paintHit.Side} | " +
-                $"World: {hit.point} | " +
-                $"UV: {paintUV}"
-            );
-
-            controller.ApplyPaint(
-                paintHit,
-                _color
+            receiver.ReceivePaint(
+                impact
             );
 
             Destroy(gameObject);
         }
 
         /// <summary>
-        /// Находит ближайшую MeshCollider, связанную с поверхностью покраски овцы.
+        /// Создаёт необязательный эффект столкновения и удаляет его после короткого времени жизни.
         /// </summary>
-        private static bool TryGetPaintSurfaceHit(
+        private void SpawnImpactEffect(
+            RaycastHit hit)
+        {
+            if (impactEffectPrefab == null)
+            {
+                return;
+            }
+
+            Vector3 normal =
+                hit.normal.sqrMagnitude > 0.0001f
+                    ? hit.normal.normalized
+                    : Vector3.up;
+
+            GameObject effect =
+                Instantiate(
+                    impactEffectPrefab,
+                    hit.point,
+                    Quaternion.LookRotation(normal)
+                );
+
+            Destroy(
+                effect,
+                impactEffectLifetime
+            );
+        }
+
+        /// <summary>
+        /// Находит ближайший подходящий Collider среди результатов SphereCast.
+        /// </summary>
+        private static bool TryGetNearestCollision(
             int hitCount,
             out RaycastHit surfaceHit)
         {
@@ -206,12 +240,12 @@ namespace Game.Paint
             {
                 RaycastHit candidate = HitBuffer[i];
 
-                if (candidate.collider is not MeshCollider)
+                if (candidate.collider == null)
                 {
                     continue;
                 }
 
-                if (candidate.collider.GetComponentInParent<SheepPaintController>() == null)
+                if (candidate.collider.GetComponentInParent<PaintShooter>() != null)
                 {
                     continue;
                 }
