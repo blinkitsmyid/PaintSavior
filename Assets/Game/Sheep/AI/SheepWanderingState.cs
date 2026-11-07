@@ -1,10 +1,12 @@
 using System;
 
+using Game.Animals.Core;
+
 namespace Game.Sheep.AI
 {
     internal sealed class SheepWanderingState : ISheepState
     {
-        private readonly SheepLocomotion _locomotion;
+        private readonly AnimalLocomotion _locomotion;
         private readonly SheepWanderArea _wanderArea;
         private readonly Func<float> _durationProvider;
         private readonly float _minimumDestinationDistance;
@@ -17,7 +19,7 @@ namespace Game.Sheep.AI
         public SheepStateId Id => SheepStateId.Wandering;
 
         public SheepWanderingState(
-            SheepLocomotion locomotion,
+            AnimalLocomotion locomotion,
             SheepWanderArea wanderArea,
             Func<float> durationProvider,
             float minimumDestinationDistance,

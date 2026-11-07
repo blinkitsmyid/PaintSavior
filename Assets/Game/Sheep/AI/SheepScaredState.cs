@@ -2,11 +2,13 @@ using System;
 
 using UnityEngine;
 
+using Game.Animals.Core;
+
 namespace Game.Sheep.AI
 {
     internal sealed class SheepScaredState : ISheepState
     {
-        private readonly SheepLocomotion _locomotion;
+        private readonly AnimalLocomotion _locomotion;
         private readonly SheepWanderArea _wanderArea;
         private readonly Func<float> _durationProvider;
         private readonly float _minimumFleeDistance;
@@ -20,7 +22,7 @@ namespace Game.Sheep.AI
         public SheepStateId Id => SheepStateId.ScaredRun;
 
         public SheepScaredState(
-            SheepLocomotion locomotion,
+            AnimalLocomotion locomotion,
             SheepWanderArea wanderArea,
             Func<float> durationProvider,
             float minimumFleeDistance,

@@ -320,6 +320,7 @@ GameObject:
   - component: {fileID: 4954853492857218681}
   - component: {fileID: 4166449689315938157}
   - component: {fileID: 4021681484460552942}
+  - component: {fileID: 3066536592464869505}
   m_Layer: 0
   m_Name: Sheep
   m_TagString: Untagged
@@ -409,6 +410,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8df326033baf46e48bf8f213a9ebdd65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.Paint.SheepPaintRenderer
+  paintTextureSize: 256
 --- !u!114 &862676375549233464
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -422,9 +424,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.Sheep.AI.SheepBrain
   locomotion: {fileID: 0}
+  perception: {fileID: 0}
   wanderArea: {fileID: 0}
   needsEnvironment: {fileID: 0}
   woolGrowth: {fileID: 0}
+  paintController: {fileID: 0}
+  playerTarget: {fileID: 0}
   minimumIdleDuration: 1.5
   maximumIdleDuration: 4
   minimumWanderDuration: 2
@@ -435,7 +440,12 @@ MonoBehaviour:
   eatingDuration: 3
   drinkingDuration: 3
   restingDuration: 4
+  friendlyDistance: 3
+  petDistance: 2.5
+  scaredDuration: 5
+  minimumFleeDistance: 3
   logStateTransitions: 1
+  logPlayerReactions: 1
 --- !u!195 &4954853492857218681
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -469,7 +479,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7a7463b463711ce48a48d7a11248da8d, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Game.Sheep.AI.SheepLocomotion
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Animals.Core.AnimalLocomotion
   agent: {fileID: 4954853492857218681}
   walkSpeed: 1.2
   arrivalDistance: 0.2
@@ -490,6 +500,19 @@ MonoBehaviour:
   mediumWoolVisual: {fileID: 0}
   fullWoolVisual: {fileID: 0}
   logGrowthProgress: 1
+--- !u!114 &3066536592464869505
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4894181608101839767}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d3f1a6c5b7e4290a4c2f9e1d6b8a735, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Animals.Core.AnimalPerception
+  target: {fileID: 0}
 --- !u!1 &6043379857744361081
 GameObject:
   m_ObjectHideFlags: 0

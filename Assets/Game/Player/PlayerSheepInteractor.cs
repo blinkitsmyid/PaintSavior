@@ -1,7 +1,7 @@
 using UnityEngine;
 
+using Game.Animals.Core;
 using Game.Paint;
-using Game.Sheep.AI;
 
 namespace Game.Player
 {
@@ -16,6 +16,9 @@ namespace Game.Player
         [SerializeField, Min(0.1f)] private float interactionDistance = 3f;
         [SerializeField] private LayerMask interactionMask = ~0;
 
+        /// <summary>
+        /// Находит ссылки на стрельбу и камеру игрока.
+        /// </summary>
         private void Awake()
         {
             if (paintShooter == null)
@@ -29,6 +32,9 @@ namespace Game.Player
             }
         }
 
+        /// <summary>
+        /// Подписывается на действие игрока без оружия для запуска взаимодействия.
+        /// </summary>
         private void OnEnable()
         {
             if (paintShooter != null)
@@ -37,6 +43,9 @@ namespace Game.Player
             }
         }
 
+        /// <summary>
+        /// Отписывается от действия игрока при отключении компонента.
+        /// </summary>
         private void OnDisable()
         {
             if (paintShooter != null)
@@ -45,6 +54,9 @@ namespace Game.Player
             }
         }
 
+        /// <summary>
+        /// Выполняет Raycast и передаёт животному команду поглаживания.
+        /// </summary>
         private void TryPetSheep()
         {
             if (playerCamera == null)
@@ -66,11 +78,17 @@ namespace Game.Player
                 return;
             }
 
-            SheepBrain sheep = hit.collider.GetComponentInParent<SheepBrain>();
+            IAnimalInteractable animal =
+                hit.collider.GetComponentInParent(
+                    typeof(IAnimalInteractable)
+                ) as IAnimalInteractable;
 
-            if (sheep != null)
+            if (animal != null)
             {
-                sheep.TryPet(transform);
+                animal.TryInteract(
+                    AnimalInteractionType.Pet,
+                    transform
+                );
             }
         }
     }

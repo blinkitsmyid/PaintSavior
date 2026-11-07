@@ -318,7 +318,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7a7463b463711ce48a48d7a11248da8d, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Game.Sheep.AI.SheepLocomotion
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Animals.Core.AnimalLocomotion
 --- !u!114 &233792443 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 4021681484460552942, guid: 0f884e69355736348952762552f684a0, type: 3}

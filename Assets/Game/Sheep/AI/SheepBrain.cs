@@ -2,17 +2,21 @@ using System;
 
 using UnityEngine;
 
+using Game.Animals.Core;
 using Game.Paint;
 
 namespace Game.Sheep.AI
 {
     [DisallowMultipleComponent]
-    public sealed class SheepBrain : MonoBehaviour
+    public sealed class SheepBrain : MonoBehaviour, IAnimalInteractable
     {
         [Header("References")]
-        [SerializeField] private SheepLocomotion locomotion;
+        [SerializeField] private AnimalDefinition definition;
+        [SerializeField] private AnimalLocomotion locomotion;
+        [SerializeField] private AnimalPerception perception;
         [SerializeField] private SheepWanderArea wanderArea;
         [SerializeField] private SheepNeedsEnvironment needsEnvironment;
+        [SerializeField] private SheepWaterEnvironment waterEnvironment;
         [SerializeField] private SheepWoolGrowth woolGrowth;
         [SerializeField] private SheepPaintController paintController;
         [SerializeField] private Transform playerTarget;
@@ -39,6 +43,10 @@ namespace Game.Sheep.AI
         [SerializeField, Min(0.1f)] private float scaredDuration = 5f;
         [SerializeField, Min(0.1f)] private float minimumFleeDistance = 3f;
 
+        [Header("Contamination")]
+        [SerializeField, Min(1)] private int hitsBeforeWash = 3;
+        [SerializeField, Min(0f)] private float washBlobDuration = 1f;
+
         [Header("Debug")]
         [SerializeField] private bool logStateTransitions = true;
         [SerializeField] private bool logPlayerReactions = true;
@@ -50,6 +58,19 @@ namespace Game.Sheep.AI
         private SheepNeedState _drinkingState;
         private SheepNeedState _restingState;
         private SheepScaredState _scaredState;
+        private SheepSeekingWaterState _seekingWaterState;
+        private SheepWashingState _washingState;
+        private SheepScaredBehaviorSource _scaredBehaviorSource;
+        private SheepSeekingWaterBehaviorSource _seekingWaterBehaviorSource;
+        private SheepWanderingBehaviorSource _wanderingBehaviorSource;
+        private SheepNeedBehaviorSource _needBehaviorSource;
+        private SheepIdleBehaviorSource _idleBehaviorSource;
+        private SheepPetBehaviorSource _petBehaviorSource;
+        private SheepFriendlyReaction _friendlyReaction;
+        private SheepContaminationState _contaminationState;
+        private AnimalBehaviorCoordinator _behaviorCoordinator;
+        private Vector3 _lastThreatPosition;
+        private bool _requiresPettingAfterScare;
 
         public bool IsFriendly { get; private set; }
         public bool IsScared => CurrentStateId == SheepStateId.ScaredRun;
@@ -59,16 +80,34 @@ namespace Game.Sheep.AI
 
         public event Action<SheepStateId, SheepStateId> StateChanged;
 
+        /// <summary>
+        /// Находит зависимости овцы и создаёт экземпляры её состояний.
+        /// </summary>
         private void Awake()
         {
             if (locomotion == null)
             {
-                locomotion = GetComponent<SheepLocomotion>();
+                locomotion = GetComponent<AnimalLocomotion>();
+            }
+
+            if (perception == null)
+            {
+                perception = GetComponent<AnimalPerception>();
+            }
+
+            if (perception != null && playerTarget != null)
+            {
+                perception.SetTarget(playerTarget);
             }
 
             if (woolGrowth == null)
             {
                 woolGrowth = GetComponent<SheepWoolGrowth>();
+            }
+
+            if (waterEnvironment == null)
+            {
+                waterEnvironment = GetComponent<SheepWaterEnvironment>();
             }
 
             if (paintController == null)
@@ -87,8 +126,8 @@ namespace Game.Sheep.AI
                 locomotion,
                 wanderArea,
                 GetRandomWanderDuration,
-                minimumWanderDistance,
-                maximumWanderPointAttempts,
+                GetMinimumWanderDistance(),
+                GetMaximumWanderPointAttempts(),
                 ReturnToIdle
             );
             _eatingState = CreateNeedState(
@@ -110,12 +149,69 @@ namespace Game.Sheep.AI
                 locomotion,
                 wanderArea,
                 GetScaredDuration,
-                minimumFleeDistance,
-                maximumWanderPointAttempts,
+                GetMinimumFleeDistance(),
+                GetMaximumWanderPointAttempts(),
                 ReturnToIdle
+            );
+            _seekingWaterState = new SheepSeekingWaterState(
+                locomotion,
+                waterEnvironment,
+                OnWaterReached,
+                ReturnToIdle
+            );
+            _washingState = new SheepWashingState(
+                locomotion,
+                paintController,
+                GetWashBlobDuration,
+                FinishWashing
+            );
+            _contaminationState = new SheepContaminationState(
+                GetHitsBeforeWash()
+            );
+
+            _scaredBehaviorSource = new SheepScaredBehaviorSource(
+                GetScaredPriority()
+            );
+            _seekingWaterBehaviorSource = new SheepSeekingWaterBehaviorSource(
+                _contaminationState,
+                waterEnvironment,
+                GetWashPriority()
+            );
+            _wanderingBehaviorSource = new SheepWanderingBehaviorSource(
+                GetWanderingPriority()
+            );
+            _needBehaviorSource = new SheepNeedBehaviorSource(
+                needsEnvironment,
+                woolGrowth,
+                GetNeedPriority()
+            );
+            _idleBehaviorSource = new SheepIdleBehaviorSource(
+                GetIdlePriority()
+            );
+            _petBehaviorSource = new SheepPetBehaviorSource(
+                GetInteractionPriority()
+            );
+            _friendlyReaction = new SheepFriendlyReaction(
+                transform,
+                perception,
+                GetFriendlyDistance()
+            );
+            _behaviorCoordinator = new AnimalBehaviorCoordinator(
+                new IAnimalBehaviorRequestSource[]
+                {
+                    _scaredBehaviorSource,
+                    _seekingWaterBehaviorSource,
+                    _needBehaviorSource,
+                    _wanderingBehaviorSource,
+                    _idleBehaviorSource,
+                    _petBehaviorSource
+                }
             );
         }
 
+        /// <summary>
+        /// Подписывается на попадания краской и запускает начальное состояние овцы.
+        /// </summary>
         private void OnEnable()
         {
             if (paintController != null)
@@ -126,12 +222,19 @@ namespace Game.Sheep.AI
             _stateMachine.Start(_idleState);
         }
 
+        /// <summary>
+        /// Обновляет FSM овцы и проверяет её спокойную реакцию на игрока.
+        /// </summary>
         private void Update()
         {
+            TryProcessBehaviorRequests(out _);
             _stateMachine.Tick(Time.deltaTime);
             UpdateFriendlyState();
         }
 
+        /// <summary>
+        /// Отписывается от событий и останавливает FSM при отключении объекта.
+        /// </summary>
         private void OnDisable()
         {
             if (paintController != null)
@@ -142,16 +245,36 @@ namespace Game.Sheep.AI
             _stateMachine.Stop();
         }
 
+        /// <summary>
+        /// Освобождает подписку на события FSM перед уничтожением объекта.
+        /// </summary>
         private void OnDestroy()
         {
             _stateMachine.StateChanged -= OnStateChanged;
         }
 
+        /// <summary>
+        /// Возвращает овцу в состояние спокойного ожидания.
+        /// </summary>
         public void ReturnToIdle()
         {
             _stateMachine.TransitionTo(_idleState);
         }
 
+        /// <summary>
+        /// Принимает универсальную команду взаимодействия и направляет её к логике овцы.
+        /// </summary>
+        public bool TryInteract(
+            AnimalInteractionType interactionType,
+            Transform actor)
+        {
+            return interactionType == AnimalInteractionType.Pet &&
+                TryPet(actor);
+        }
+
+        /// <summary>
+        /// Проверяет возможность поглаживания и возвращает напуганную овцу к дружелюбию.
+        /// </summary>
         public bool TryPet(Transform player)
         {
             if (!IsScared || player == null)
@@ -162,17 +285,35 @@ namespace Game.Sheep.AI
             Vector3 offset = player.position - transform.position;
             offset.y = 0f;
 
-            if (offset.sqrMagnitude > petDistance * petDistance)
+            float configuredPetDistance = GetPetDistance();
+
+            if (offset.sqrMagnitude >
+                configuredPetDistance * configuredPetDistance)
             {
                 return false;
             }
 
             playerTarget = player;
-            SetFriendly(true, "petting");
-            ReturnToIdle();
-            return true;
+
+            if (perception != null)
+            {
+                perception.SetTarget(player);
+            }
+
+            _petBehaviorSource.Request(player);
+
+            if (!TryProcessBehaviorRequests(
+                    out AnimalBehaviorRequest request))
+            {
+                return false;
+            }
+
+            return request.BehaviorId == SheepPetBehaviorSource.BehaviorId;
         }
 
+        /// <summary>
+        /// Пытается запустить случайное блуждание по доступной области.
+        /// </summary>
         private bool TryStartWandering()
         {
             if (locomotion == null || wanderArea == null ||
@@ -181,14 +322,60 @@ namespace Game.Sheep.AI
                 return false;
             }
 
-            return _stateMachine.TransitionTo(_wanderingState);
+            _wanderingBehaviorSource.Request();
+            return TryProcessBehaviorRequests(out _);
         }
 
+        /// <summary>
+        /// Пытается запустить движение овцы к ближайшему доступному водоёму.
+        /// </summary>
+        private bool TryStartSeekingWater()
+        {
+            if (_contaminationState == null ||
+                !_contaminationState.WantsToWash ||
+                locomotion == null || !locomotion.IsReady ||
+                waterEnvironment == null)
+            {
+                return false;
+            }
+
+            _seekingWaterBehaviorSource.Request();
+            return TryProcessBehaviorRequests(out _);
+        }
+
+        /// <summary>
+        /// Передаёт достигнутый водоём состоянию мытья и переводит овцу к воде.
+        /// </summary>
+        private void OnWaterReached(
+            SheepWaterPoint waterPoint)
+        {
+            _washingState.SetWaterPoint(waterPoint);
+            _stateMachine.TransitionTo(_washingState);
+        }
+
+        /// <summary>
+        /// Завершает мытьё, отменяет намерение идти к воде и возвращает овцу к обычной жизни.
+        /// </summary>
+        private void FinishWashing()
+        {
+            _contaminationState.CancelWashIntent();
+            ReturnToIdle();
+        }
+
+        /// <summary>
+        /// Выбирает между потребностью, блужданием и повторным ожиданием.
+        /// </summary>
         private bool TryStartCalmBehaviour()
         {
             bool shouldTryNeed = woolGrowth != null &&
                 needsEnvironment != null &&
-                UnityEngine.Random.value <= needChoiceChance;
+                UnityEngine.Random.value <= GetNeedChoiceChance();
+
+            if (_contaminationState.WantsToWash &&
+                TryStartSeekingWater())
+            {
+                return true;
+            }
 
             if (shouldTryNeed && TryStartAvailableNeed())
             {
@@ -200,9 +387,19 @@ namespace Game.Sheep.AI
                 return true;
             }
 
-            return !shouldTryNeed && TryStartAvailableNeed();
+            if (!shouldTryNeed && TryStartAvailableNeed())
+            {
+                return true;
+            }
+
+            _idleBehaviorSource.Request();
+            TryProcessBehaviorRequests(out _);
+            return false;
         }
 
+        /// <summary>
+        /// Ищет ещё не выполненную потребность с доступной точкой назначения.
+        /// </summary>
         private bool TryStartAvailableNeed()
         {
             if (locomotion == null || needsEnvironment == null ||
@@ -211,24 +408,13 @@ namespace Game.Sheep.AI
                 return false;
             }
 
-            int firstNeed = UnityEngine.Random.Range(0, 3);
-
-            for (int offset = 0; offset < 3; offset++)
-            {
-                SheepNeedType need = (SheepNeedType)((firstNeed + offset) % 3);
-
-                if (!woolGrowth.CanCompleteNeed(need) ||
-                    !needsEnvironment.HasAvailablePoint(need))
-                {
-                    continue;
-                }
-
-                return _stateMachine.TransitionTo(GetStateForNeed(need));
-            }
-
-            return false;
+            _needBehaviorSource.Request();
+            return TryProcessBehaviorRequests(out _);
         }
 
+        /// <summary>
+        /// Создаёт состояние выполнения указанной потребности овцы.
+        /// </summary>
         private SheepNeedState CreateNeedState(
             SheepStateId stateId,
             SheepNeedType needType,
@@ -245,6 +431,9 @@ namespace Game.Sheep.AI
             );
         }
 
+        /// <summary>
+        /// Возвращает заранее созданное состояние для типа потребности.
+        /// </summary>
         private SheepNeedState GetStateForNeed(SheepNeedType need)
         {
             return need switch
@@ -256,65 +445,374 @@ namespace Game.Sheep.AI
             };
         }
 
+        /// <summary>
+        /// Возвращает случайную длительность состояния Idle.
+        /// </summary>
         private float GetRandomIdleDuration()
         {
             return UnityEngine.Random.Range(
-                minimumIdleDuration,
-                maximumIdleDuration
+                GetMinimumIdleDuration(),
+                GetMaximumIdleDuration()
             );
         }
 
+        /// <summary>
+        /// Возвращает случайную длительность состояния Wandering.
+        /// </summary>
         private float GetRandomWanderDuration()
         {
             return UnityEngine.Random.Range(
-                minimumWanderDuration,
-                maximumWanderDuration
+                GetMinimumWanderDuration(),
+                GetMaximumWanderDuration()
             );
         }
 
+        /// <summary>
+        /// Возвращает минимальную длительность Idle из конфигурации или резервного поля.
+        /// </summary>
+        private float GetMinimumIdleDuration()
+        {
+            return definition != null
+                ? definition.MinimumIdleDuration
+                : minimumIdleDuration;
+        }
+
+        /// <summary>
+        /// Возвращает максимальную длительность Idle из конфигурации или резервного поля.
+        /// </summary>
+        private float GetMaximumIdleDuration()
+        {
+            return definition != null
+                ? definition.MaximumIdleDuration
+                : maximumIdleDuration;
+        }
+
+        /// <summary>
+        /// Возвращает минимальную длительность блуждания из конфигурации или резервного поля.
+        /// </summary>
+        private float GetMinimumWanderDuration()
+        {
+            return definition != null
+                ? definition.MinimumWanderDuration
+                : minimumWanderDuration;
+        }
+
+        /// <summary>
+        /// Возвращает максимальную длительность блуждания из конфигурации или резервного поля.
+        /// </summary>
+        private float GetMaximumWanderDuration()
+        {
+            return definition != null
+                ? definition.MaximumWanderDuration
+                : maximumWanderDuration;
+        }
+
+        /// <summary>
+        /// Возвращает минимальную дистанцию блуждания из конфигурации или резервного поля.
+        /// </summary>
+        private float GetMinimumWanderDistance()
+        {
+            return definition != null
+                ? definition.MinimumWanderDistance
+                : minimumWanderDistance;
+        }
+
+        /// <summary>
+        /// Возвращает лимит попыток поиска точки из конфигурации или резервного поля.
+        /// </summary>
+        private int GetMaximumWanderPointAttempts()
+        {
+            return definition != null
+                ? definition.MaximumWanderPointAttempts
+                : maximumWanderPointAttempts;
+        }
+
+        /// <summary>
+        /// Возвращает настроенную длительность поедания травы.
+        /// </summary>
         private float GetEatingDuration()
         {
-            return eatingDuration;
+            return definition != null
+                ? definition.EatingDuration
+                : eatingDuration;
         }
 
+        /// <summary>
+        /// Возвращает настроенную длительность питья воды.
+        /// </summary>
         private float GetDrinkingDuration()
         {
-            return drinkingDuration;
+            return definition != null
+                ? definition.DrinkingDuration
+                : drinkingDuration;
         }
 
+        /// <summary>
+        /// Возвращает настроенную длительность отдыха у цветов.
+        /// </summary>
         private float GetRestingDuration()
         {
-            return restingDuration;
+            return definition != null
+                ? definition.RestingDuration
+                : restingDuration;
         }
 
+        /// <summary>
+        /// Возвращает вероятность выбора потребности из конфигурации или резервного поля.
+        /// </summary>
+        private float GetNeedChoiceChance()
+        {
+            return definition != null
+                ? definition.NeedChoiceChance
+                : needChoiceChance;
+        }
+
+        /// <summary>
+        /// Возвращает настроенную длительность испуга.
+        /// </summary>
         private float GetScaredDuration()
         {
-            return scaredDuration;
+            return definition != null
+                ? definition.ScaredDuration
+                : scaredDuration;
         }
 
+        /// <summary>
+        /// Возвращает приоритет испуганного поведения из конфигурации или резервное значение.
+        /// </summary>
+        private int GetScaredPriority()
+        {
+            return definition != null
+                ? definition.ScaredPriority
+                : 80;
+        }
+
+        /// <summary>
+        /// Возвращает приоритет блуждания из конфигурации или резервное значение.
+        /// </summary>
+        private int GetWanderingPriority()
+        {
+            return definition != null
+                ? definition.WanderingPriority
+                : 20;
+        }
+
+        /// <summary>
+        /// Возвращает приоритет потребностей из конфигурации или резервное значение.
+        /// </summary>
+        private int GetNeedPriority()
+        {
+            return definition != null
+                ? definition.NeedPriority
+                : 40;
+        }
+
+        /// <summary>
+        /// Возвращает приоритет мытья из конфигурации или резервное значение.
+        /// </summary>
+        private int GetWashPriority()
+        {
+            return definition != null
+                ? definition.WashPriority
+                : 90;
+        }
+
+        /// <summary>
+        /// Возвращает приоритет спокойного ожидания из конфигурации или резервное значение.
+        /// </summary>
+        private int GetIdlePriority()
+        {
+            return definition != null
+                ? definition.IdlePriority
+                : 10;
+        }
+
+        /// <summary>
+        /// Возвращает дистанцию дружелюбной реакции из конфигурации или резервного поля.
+        /// </summary>
+        private float GetFriendlyDistance()
+        {
+            return definition != null
+                ? definition.FriendlyDistance
+                : friendlyDistance;
+        }
+
+        /// <summary>
+        /// Возвращает дистанцию поглаживания из конфигурации или резервного поля.
+        /// </summary>
+        private float GetPetDistance()
+        {
+            return definition != null
+                ? definition.PetDistance
+                : petDistance;
+        }
+
+        /// <summary>
+        /// Возвращает минимальную дистанцию бегства из конфигурации или резервного поля.
+        /// </summary>
+        private float GetMinimumFleeDistance()
+        {
+            return definition != null
+                ? definition.MinimumFleeDistance
+                : minimumFleeDistance;
+        }
+
+        /// <summary>
+        /// Возвращает порог попаданий до мытья из конфигурации или резервного поля.
+        /// </summary>
+        private int GetHitsBeforeWash()
+        {
+            return definition != null
+                ? definition.HitsBeforeWash
+                : hitsBeforeWash;
+        }
+
+        /// <summary>
+        /// Возвращает длительность удаления пятна из конфигурации или резервного поля.
+        /// </summary>
+        private float GetWashBlobDuration()
+        {
+            return definition != null
+                ? definition.WashBlobDuration
+                : washBlobDuration;
+        }
+
+        /// <summary>
+        /// Возвращает приоритет интерактивной команды из конфигурации или резервное значение.
+        /// </summary>
+        private int GetInteractionPriority()
+        {
+            return definition != null
+                ? definition.InteractionPriority
+                : 70;
+        }
+
+        /// <summary>
+        /// Переводит овцу в испуганное состояние после попадания краской.
+        /// </summary>
         private void OnPaintHitReceived(PaintHit hit, Color color)
         {
+            _contaminationState.RegisterHit();
+            _requiresPettingAfterScare = true;
+            _lastThreatPosition = hit.SourcePosition;
             SetFriendly(false, "paint hit");
-            _scaredState.ReactToThreat(hit.SourcePosition);
-            _stateMachine.TransitionTo(_scaredState);
+            _scaredBehaviorSource.Request();
         }
 
+        /// <summary>
+        /// Передаёт победившие заявки поведения в соответствующие состояния овцы.
+        /// </summary>
+        private bool TryProcessBehaviorRequests(
+            out AnimalBehaviorRequest processedRequest)
+        {
+            processedRequest = default;
+
+            if (_behaviorCoordinator == null ||
+                !_behaviorCoordinator.TryEvaluate(
+                    Time.time,
+                    out AnimalBehaviorRequest request))
+            {
+                return false;
+            }
+
+            processedRequest = request;
+
+            if (request.BehaviorId == SheepScaredBehaviorSource.BehaviorId)
+            {
+                _scaredBehaviorSource.Consume();
+                _scaredState.ReactToThreat(_lastThreatPosition);
+                _stateMachine.TransitionTo(_scaredState);
+                return true;
+            }
+
+            if (request.BehaviorId == SheepWanderingBehaviorSource.BehaviorId)
+            {
+                return _stateMachine.TransitionTo(_wanderingState);
+            }
+
+            if (request.BehaviorId == SheepSeekingWaterBehaviorSource.BehaviorId)
+            {
+                return _stateMachine.TransitionTo(_seekingWaterState);
+            }
+
+            if (request.BehaviorId == SheepNeedBehaviorSource.EatingBehaviorId)
+            {
+                return _stateMachine.TransitionTo(_eatingState);
+            }
+
+            if (request.BehaviorId == SheepNeedBehaviorSource.DrinkingBehaviorId)
+            {
+                return _stateMachine.TransitionTo(_drinkingState);
+            }
+
+            if (request.BehaviorId == SheepNeedBehaviorSource.RestingBehaviorId)
+            {
+                return _stateMachine.TransitionTo(_restingState);
+            }
+
+            if (request.BehaviorId == SheepIdleBehaviorSource.BehaviorId)
+            {
+                if (CurrentStateId == SheepStateId.Idle)
+                {
+                    return false;
+                }
+
+                return _stateMachine.TransitionTo(_idleState);
+            }
+
+            if (request.BehaviorId == SheepPetBehaviorSource.BehaviorId)
+            {
+                if (request.Target != null)
+                {
+                    playerTarget = request.Target;
+
+                    if (perception != null)
+                    {
+                        perception.SetTarget(request.Target);
+                    }
+                }
+
+                _contaminationState.CancelWashIntent();
+                _requiresPettingAfterScare = false;
+                SetFriendly(true, "petting");
+                ReturnToIdle();
+
+                if (logPlayerReactions)
+                {
+                    Debug.Log(
+                        $"{name}: petting succeeded; friendly = {IsFriendly}.",
+                        this
+                    );
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Проверяет приближение игрока и включает дружелюбную реакцию овцы.
+        /// </summary>
         private void UpdateFriendlyState()
         {
-            if (IsScared || IsFriendly || playerTarget == null)
+            if (!_friendlyReaction.TryGetNearbyTarget(
+                    playerTarget,
+                    IsScared,
+                    IsFriendly,
+                    _requiresPettingAfterScare,
+                    out Transform target))
             {
                 return;
             }
 
-            Vector3 offset = playerTarget.position - transform.position;
-            offset.y = 0f;
-
-            if (offset.sqrMagnitude <= friendlyDistance * friendlyDistance)
-            {
-                SetFriendly(true, "игрок рядом");
-            }
+            playerTarget = target;
+            SetFriendly(true, "игрок рядом");
         }
 
+        /// <summary>
+        /// Изменяет дружелюбный статус и при необходимости записывает причину изменения.
+        /// </summary>
         private void SetFriendly(bool friendly, string reason)
         {
             if (IsFriendly == friendly)
@@ -333,6 +831,9 @@ namespace Game.Sheep.AI
             }
         }
 
+        /// <summary>
+        /// Ограничивает настройки поведения овцы допустимыми значениями в Inspector.
+        /// </summary>
         private void OnValidate()
         {
             minimumIdleDuration = Mathf.Max(0f, minimumIdleDuration);
@@ -358,8 +859,13 @@ namespace Game.Sheep.AI
             petDistance = Mathf.Max(0.1f, petDistance);
             scaredDuration = Mathf.Max(0.1f, scaredDuration);
             minimumFleeDistance = Mathf.Max(0.1f, minimumFleeDistance);
+            hitsBeforeWash = Mathf.Max(1, hitsBeforeWash);
+            washBlobDuration = Mathf.Max(0f, washBlobDuration);
         }
 
+        /// <summary>
+        /// Передаёт изменение состояния внешним подписчикам и выводит отладочный лог.
+        /// </summary>
         private void OnStateChanged(
             SheepStateId previousState,
             SheepStateId nextState)

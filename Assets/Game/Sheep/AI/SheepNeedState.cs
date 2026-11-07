@@ -1,12 +1,14 @@
 using System;
 
+using Game.Animals.Core;
+
 namespace Game.Sheep.AI
 {
     internal sealed class SheepNeedState : ISheepState
     {
         private readonly SheepStateId _id;
         private readonly SheepNeedType _needType;
-        private readonly SheepLocomotion _locomotion;
+        private readonly AnimalLocomotion _locomotion;
         private readonly SheepNeedsEnvironment _environment;
         private readonly SheepWoolGrowth _woolGrowth;
         private readonly Func<float> _actionDurationProvider;
@@ -21,7 +23,7 @@ namespace Game.Sheep.AI
         public SheepNeedState(
             SheepStateId id,
             SheepNeedType needType,
-            SheepLocomotion locomotion,
+            AnimalLocomotion locomotion,
             SheepNeedsEnvironment environment,
             SheepWoolGrowth woolGrowth,
             Func<float> actionDurationProvider,
