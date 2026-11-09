@@ -237,6 +237,20 @@ namespace Game.Paint
         }
 
         /// <summary>
+        /// Удаляет все текущие пятна через общий контракт удаления и уведомляет визуальные подписчики.
+        /// </summary>
+        public void ClearAllBlobs()
+        {
+            while (_blobsInOrder.Count > 0)
+            {
+                int sequence =
+                    _blobsInOrder[_blobsInOrder.Count - 1].Sequence;
+
+                RemoveBlob(sequence);
+            }
+        }
+
+        /// <summary>
         /// Удаляет пятно только из глобального списка после автоматического вытеснения лимитом стороны.
         /// </summary>
         private bool RemoveFromGlobalOrder(

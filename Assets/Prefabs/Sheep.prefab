@@ -423,10 +423,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bc491fa62110fb847a7b21e86c764ba5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.Sheep.AI.SheepBrain
+  definition: {fileID: 0}
   locomotion: {fileID: 0}
   perception: {fileID: 0}
   wanderArea: {fileID: 0}
   needsEnvironment: {fileID: 0}
+  waterEnvironment: {fileID: 0}
   woolGrowth: {fileID: 0}
   paintController: {fileID: 0}
   playerTarget: {fileID: 0}
@@ -444,8 +446,12 @@ MonoBehaviour:
   petDistance: 2.5
   scaredDuration: 5
   minimumFleeDistance: 3
+  hitsBeforeWash: 3
+  washBlobDuration: 1
+  shearingDuration: 2
   logStateTransitions: 1
   logPlayerReactions: 1
+  allowShearingAfterAnyPaintHitForTesting: 0
 --- !u!195 &4954853492857218681
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -480,6 +486,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a7463b463711ce48a48d7a11248da8d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.Animals.Core.AnimalLocomotion
+  definition: {fileID: 0}
   agent: {fileID: 4954853492857218681}
   walkSpeed: 1.2
   arrivalDistance: 0.2
@@ -495,10 +502,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e6fcc36d4fefe249a8c13260da80d15, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.Sheep.AI.SheepWoolGrowth
-  initialStage: 0
-  shavedWoolVisual: {fileID: 0}
-  mediumWoolVisual: {fileID: 0}
-  fullWoolVisual: {fileID: 0}
+  initialStage: 2
+  shavedWoolVisual: {fileID: 919132149155446097, guid: 31d2c91682ac6f045b4b75ebf27e5d77, type: 3}
+  mediumWoolVisual: {fileID: 919132149155446097, guid: 8739604ff156c91408e3f6352de03dbc, type: 3}
+  fullWoolVisual: {fileID: 919132149155446097, guid: 33246b64c1371e444b73335f655fc158, type: 3}
   logGrowthProgress: 1
 --- !u!114 &3066536592464869505
 MonoBehaviour:

@@ -1,5 +1,5 @@
 using System;
-
+using Game.Animals.Core;
 using Game.Paint;
 
 namespace Game.Sheep.AI

@@ -7,7 +7,8 @@ namespace Game.Animals.Core
     /// </summary>
     public enum AnimalInteractionType
     {
-        Pet = 0
+        Pet = 0,
+        Shear = 1
     }
 
     /// <summary>

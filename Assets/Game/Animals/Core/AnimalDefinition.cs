@@ -42,6 +42,10 @@ namespace Game.Animals.Core
         [SerializeField, Min(1)] private int hitsBeforeWash = 3;
         [SerializeField, Min(0f)] private float washBlobDuration = 1f;
 
+        [Header("Shearing")]
+        [SerializeField, Min(1)] private int woolClumpCount = 4;
+        [SerializeField, Min(0f)] private float shearingDuration = 2f;
+
         [Header("Behavior Priorities")]
         [SerializeField, Min(0)] private int shearPriority = 100;
         [SerializeField, Min(0)] private int washPriority = 90;
@@ -145,6 +149,16 @@ namespace Game.Animals.Core
         /// Возвращает время удаления одного пятна во время мытья.
         /// </summary>
         public float WashBlobDuration => washBlobDuration;
+
+        /// <summary>
+        /// Возвращает количество клочков шерсти, создаваемых при стрижке.
+        /// </summary>
+        public int WoolClumpCount => Mathf.Max(1, woolClumpCount);
+
+        /// <summary>
+        /// Возвращает длительность процесса стрижки.
+        /// </summary>
+        public float ShearingDuration => Mathf.Max(0f, shearingDuration);
 
         /// <summary>
         /// Возвращает приоритет стрижки животного.

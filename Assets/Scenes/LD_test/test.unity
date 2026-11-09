@@ -4245,6 +4245,10 @@ PrefabInstance:
       propertyPath: waterEnvironment
       value: 
       objectReference: {fileID: 1916150917}
+    - target: {fileID: 862676375549233464, guid: 0f884e69355736348952762552f684a0, type: 3}
+      propertyPath: allowShearingAfterAnyPaintHitForTesting
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2198741133452625088, guid: 0f884e69355736348952762552f684a0, type: 3}
       propertyPath: m_IsActive
       value: 0

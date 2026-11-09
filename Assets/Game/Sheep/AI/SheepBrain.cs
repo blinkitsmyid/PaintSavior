@@ -47,9 +47,15 @@ namespace Game.Sheep.AI
         [SerializeField, Min(1)] private int hitsBeforeWash = 3;
         [SerializeField, Min(0f)] private float washBlobDuration = 1f;
 
+        [Header("Shearing")]
+        [SerializeField, Min(0f)] private float shearingDuration = 2f;
+
         [Header("Debug")]
         [SerializeField] private bool logStateTransitions = true;
         [SerializeField] private bool logPlayerReactions = true;
+
+        [Header("Testing")]
+        [SerializeField] private bool allowShearingAfterAnyPaintHitForTesting;
 
         private SheepStateMachine _stateMachine;
         private SheepIdleState _idleState;
@@ -60,6 +66,7 @@ namespace Game.Sheep.AI
         private SheepScaredState _scaredState;
         private SheepSeekingWaterState _seekingWaterState;
         private SheepWashingState _washingState;
+        private SheepShearingState _shearingState;
         private SheepScaredBehaviorSource _scaredBehaviorSource;
         private SheepSeekingWaterBehaviorSource _seekingWaterBehaviorSource;
         private SheepWanderingBehaviorSource _wanderingBehaviorSource;
@@ -75,8 +82,39 @@ namespace Game.Sheep.AI
         public bool IsFriendly { get; private set; }
         public bool IsScared => CurrentStateId == SheepStateId.ScaredRun;
 
+        /// <summary>
+        /// Показывает, выполнены ли условия для начала стрижки овцы.
+        /// </summary>
+        public bool CanBeSheared =>
+            !IsScared &&
+            CurrentStateId != SheepStateId.SeekingWater &&
+            CurrentStateId != SheepStateId.Washing &&
+            CurrentStateId != SheepStateId.Shearing &&
+            woolGrowth != null &&
+            woolGrowth.IsFullyGrown &&
+            HasRequiredPaintForShearing();
+
         public SheepStateId CurrentStateId =>
             _stateMachine?.CurrentStateId ?? SheepStateId.None;
+
+        /// <summary>
+        /// Проверяет, выполнено ли требование по покраске с учётом временного режима тестирования.
+        /// </summary>
+        private bool HasRequiredPaintForShearing()
+        {
+            if (paintController == null)
+            {
+                return false;
+            }
+
+            if (paintController.AreAllSidesPainted())
+            {
+                return true;
+            }
+
+            return allowShearingAfterAnyPaintHitForTesting &&
+                paintController.BlobsInOrder.Count > 0;
+        }
 
         public event Action<SheepStateId, SheepStateId> StateChanged;
 
@@ -164,6 +202,11 @@ namespace Game.Sheep.AI
                 paintController,
                 GetWashBlobDuration,
                 FinishWashing
+            );
+            _shearingState = new SheepShearingState(
+                locomotion,
+                GetShearingDuration,
+                FinishShearing
             );
             _contaminationState = new SheepContaminationState(
                 GetHitsBeforeWash()
@@ -268,8 +311,40 @@ namespace Game.Sheep.AI
             AnimalInteractionType interactionType,
             Transform actor)
         {
-            return interactionType == AnimalInteractionType.Pet &&
-                TryPet(actor);
+            if (interactionType == AnimalInteractionType.Pet)
+            {
+                return TryPet(actor);
+            }
+
+            if (interactionType == AnimalInteractionType.Shear)
+            {
+                return TryRequestShearing();
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Проверяет допуск к стрижке и сообщает результат без запуска самой стрижки.
+        /// </summary>
+        private bool TryRequestShearing()
+        {
+            if (!CanBeSheared)
+            {
+                Debug.Log(
+                    $"{name}: shearing denied.",
+                    this
+                );
+                return false;
+            }
+
+            Debug.Log(
+                $"{name}: shearing allowed.",
+                this
+            );
+
+            _stateMachine.TransitionTo(_shearingState);
+            return true;
         }
 
         /// <summary>
@@ -359,6 +434,17 @@ namespace Game.Sheep.AI
         private void FinishWashing()
         {
             _contaminationState.CancelWashIntent();
+            ReturnToIdle();
+        }
+
+        /// <summary>
+        /// Завершает состояние стрижки и возвращает овцу к обычному поведению.
+        /// </summary>
+        private void FinishShearing()
+        {
+            woolGrowth?.ResetToShaved();
+            _contaminationState.CancelWashIntent();
+            paintController?.ClearAllBlobs();
             ReturnToIdle();
         }
 
@@ -678,6 +764,16 @@ namespace Game.Sheep.AI
         }
 
         /// <summary>
+        /// Возвращает длительность стрижки из конфигурации или резервного поля.
+        /// </summary>
+        private float GetShearingDuration()
+        {
+            return definition != null
+                ? definition.ShearingDuration
+                : shearingDuration;
+        }
+
+        /// <summary>
         /// Возвращает приоритет интерактивной команды из конфигурации или резервное значение.
         /// </summary>
         private int GetInteractionPriority()
@@ -861,6 +957,7 @@ namespace Game.Sheep.AI
             minimumFleeDistance = Mathf.Max(0.1f, minimumFleeDistance);
             hitsBeforeWash = Mathf.Max(1, hitsBeforeWash);
             washBlobDuration = Mathf.Max(0f, washBlobDuration);
+            shearingDuration = Mathf.Max(0f, shearingDuration);
         }
 
         /// <summary>

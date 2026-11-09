@@ -30,6 +30,9 @@ MonoBehaviour:
   scaredDuration: 10
   minimumFleeDistance: 7
   hitsBeforeWash: 1
+  washBlobDuration: 2
+  woolClumpCount: 2
+  shearingDuration: 2
   shearPriority: 100
   washPriority: 90
   scaredPriority: 80
