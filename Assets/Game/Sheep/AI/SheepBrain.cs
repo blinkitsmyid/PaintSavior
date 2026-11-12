@@ -260,6 +260,12 @@ namespace Game.Sheep.AI
             if (paintController != null)
             {
                 paintController.PaintHitReceived += OnPaintHitReceived;
+                paintController.RefreshSurfaceCollider();
+            }
+
+            if (woolGrowth != null)
+            {
+                woolGrowth.StageChanged += OnWoolStageChanged;
             }
 
             _stateMachine.Start(_idleState);
@@ -283,6 +289,11 @@ namespace Game.Sheep.AI
             if (paintController != null)
             {
                 paintController.PaintHitReceived -= OnPaintHitReceived;
+            }
+
+            if (woolGrowth != null)
+            {
+                woolGrowth.StageChanged -= OnWoolStageChanged;
             }
 
             _stateMachine.Stop();
@@ -793,6 +804,16 @@ namespace Game.Sheep.AI
             _lastThreatPosition = hit.SourcePosition;
             SetFriendly(false, "paint hit");
             _scaredBehaviorSource.Request();
+        }
+
+        /// <summary>
+        /// Обновляет меш поверхности покраски после смены визуальной стадии шерсти.
+        /// </summary>
+        private void OnWoolStageChanged(
+            WoolGrowthStage previousStage,
+            WoolGrowthStage nextStage)
+        {
+            paintController?.RefreshSurfaceCollider();
         }
 
         /// <summary>

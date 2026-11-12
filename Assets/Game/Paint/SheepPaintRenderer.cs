@@ -1,5 +1,7 @@
 using UnityEngine;
 
+using Game.Sheep.AI;
+
 namespace Game.Paint
 {
     [RequireComponent(typeof(SheepPaintController))]
@@ -7,6 +9,9 @@ namespace Game.Paint
     {
         private const string CoverageStampShaderName =
             "Hidden/Game/PaintCoverageStamp";
+
+        private const string PaintShaderName =
+            "Game/Paint/SheepPaint";
 
         private static readonly int PaintBlobMaskId =
             Shader.PropertyToID("_PaintBlobMask");
@@ -24,6 +29,7 @@ namespace Game.Paint
         [SerializeField] private int paintTextureSize = 256;
 
         private SheepPaintController _paintController;
+        private SheepWoolGrowth _woolGrowth;
         private MaterialPropertyBlock _propertyBlock;
         private Renderer _renderer;
         private Material _stampMaterial;
@@ -38,8 +44,11 @@ namespace Game.Paint
             _paintController =
                 GetComponent<SheepPaintController>();
 
+            _woolGrowth =
+                GetComponent<SheepWoolGrowth>();
+
             _renderer =
-                GetComponentInChildren<Renderer>();
+                FindActivePaintRenderer();
 
             _propertyBlock =
                 new MaterialPropertyBlock();
@@ -69,6 +78,11 @@ namespace Game.Paint
 
             _paintController.BlobCreated += OnBlobCreated;
             _paintController.BlobRemoved += OnBlobRemoved;
+
+            if (_woolGrowth != null)
+            {
+                _woolGrowth.StageChanged += OnWoolStageChanged;
+            }
         }
 
         /// <summary>
@@ -76,13 +90,16 @@ namespace Game.Paint
         /// </summary>
         private void OnDisable()
         {
-            if (_paintController == null)
+            if (_paintController != null)
             {
-                return;
+                _paintController.BlobCreated -= OnBlobCreated;
+                _paintController.BlobRemoved -= OnBlobRemoved;
             }
 
-            _paintController.BlobCreated -= OnBlobCreated;
-            _paintController.BlobRemoved -= OnBlobRemoved;
+            if (_woolGrowth != null)
+            {
+                _woolGrowth.StageChanged -= OnWoolStageChanged;
+            }
         }
 
         /// <summary>
@@ -90,6 +107,87 @@ namespace Game.Paint
         /// </summary>
         private void Start()
         {
+            RefreshActiveRenderer();
+            RebuildPaintTexture();
+        }
+
+        /// <summary>
+        /// Обновляет ссылку на активную визуальную модель с шейдером покраски.
+        /// </summary>
+        private void RefreshActiveRenderer()
+        {
+            Renderer activeRenderer =
+                FindActivePaintRenderer();
+
+            if (activeRenderer == null)
+            {
+                Debug.LogWarning(
+                    $"{name}: active renderer with shader " +
+                    $"'{PaintShaderName}' is missing.",
+                    this
+                );
+                return;
+            }
+
+            _renderer = activeRenderer;
+            UpdateStampMaterialMask();
+        }
+
+        /// <summary>
+        /// Находит активный Renderer, у которого хотя бы один материал использует шейдер покраски.
+        /// </summary>
+        private Renderer FindActivePaintRenderer()
+        {
+            Renderer[] renderers =
+                GetComponentsInChildren<Renderer>(true);
+
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                Renderer candidate = renderers[i];
+
+                if (!candidate.gameObject.activeInHierarchy ||
+                    !UsesPaintShader(candidate))
+                {
+                    continue;
+                }
+
+                return candidate;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Проверяет, содержит ли Renderer материал с шейдером покраски.
+        /// </summary>
+        private static bool UsesPaintShader(
+            Renderer candidate)
+        {
+            Material[] materials = candidate.sharedMaterials;
+
+            for (int i = 0; i < materials.Length; i++)
+            {
+                Material material = materials[i];
+
+                if (material != null &&
+                    material.shader != null &&
+                    material.shader.name == PaintShaderName)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Обновляет визуальную поверхность и повторно применяет накопленные кляксы после смены шерсти.
+        /// </summary>
+        private void OnWoolStageChanged(
+            WoolGrowthStage previousStage,
+            WoolGrowthStage nextStage)
+        {
+            RefreshActiveRenderer();
             RebuildPaintTexture();
         }
 
@@ -141,6 +239,41 @@ namespace Game.Paint
                 _renderer.sharedMaterial != null
                     ? _renderer.sharedMaterial.GetTexture(PaintBlobMaskId)
                     : null;
+
+            _stampMaterial.SetTexture(
+                PaintBlobMaskId,
+                blobMask != null
+                    ? blobMask
+                    : Texture2D.whiteTexture
+            );
+        }
+
+        /// <summary>
+        /// Обновляет текстуру формы кляксы из текущего активного материала.
+        /// </summary>
+        private void UpdateStampMaterialMask()
+        {
+            if (_stampMaterial == null || _renderer == null)
+            {
+                return;
+            }
+
+            Texture blobMask = null;
+            Material[] materials = _renderer.sharedMaterials;
+
+            for (int i = 0; i < materials.Length; i++)
+            {
+                Material material = materials[i];
+
+                if (material == null ||
+                    !material.HasProperty(PaintBlobMaskId))
+                {
+                    continue;
+                }
+
+                blobMask = material.GetTexture(PaintBlobMaskId);
+                break;
+            }
 
             _stampMaterial.SetTexture(
                 PaintBlobMaskId,

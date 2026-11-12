@@ -12,6 +12,9 @@ namespace Game.Paint
         [SerializeField] private float minBlobSize = 0.15f;
         [SerializeField] private float maxBlobSize = 0.3f;
 
+        [Header("Paint Surface")]
+        [SerializeField] private MeshCollider paintSurfaceCollider;
+
         private readonly Dictionary<SheepSide, SidePaintState> _sides = new();
         private readonly List<PaintBlobData> _blobsInOrder = new();
 
@@ -60,38 +63,75 @@ namespace Game.Paint
         /// </summary>
         private void EnsureSurfaceCollider()
         {
-            MeshFilter meshFilter =
-                GetComponentInChildren<MeshFilter>();
-
-            if (meshFilter == null || meshFilter.sharedMesh == null)
+            if (paintSurfaceCollider == null)
             {
                 Debug.LogWarning(
-                    $"{name}: paint surface MeshFilter or mesh is missing."
+                    $"{name}: dedicated paint surface MeshCollider is missing."
                 );
 
                 return;
             }
 
-            MeshCollider meshCollider =
-                meshFilter.GetComponent<MeshCollider>();
+            paintSurfaceCollider.convex = false;
+            RefreshSurfaceCollider();
+        }
 
-            if (meshCollider == null)
+        /// <summary>
+        /// Назначает отдельному коллайдеру меш активного визуального варианта овцы.
+        /// </summary>
+        public void RefreshSurfaceCollider()
+        {
+            if (paintSurfaceCollider == null)
             {
-                meshCollider =
-                    meshFilter.gameObject.AddComponent<MeshCollider>();
+                return;
             }
 
-            meshCollider.convex = false;
-            meshCollider.sharedMesh = null;
-            meshCollider.sharedMesh = meshFilter.sharedMesh;
+            MeshFilter activeMeshFilter = FindActiveMeshFilter();
 
-            BoxCollider oldPrototypeCollider =
-                GetComponent<BoxCollider>();
-
-            if (oldPrototypeCollider != null)
+            if (activeMeshFilter == null || activeMeshFilter.sharedMesh == null)
             {
-                oldPrototypeCollider.enabled = false;
+                Debug.LogWarning(
+                    $"{name}: active wool visual MeshFilter or mesh is missing.",
+                    this
+                );
+                return;
             }
+
+            paintSurfaceCollider.sharedMesh = null;
+            paintSurfaceCollider.sharedMesh = activeMeshFilter.sharedMesh;
+            paintSurfaceCollider.transform.localPosition =
+                activeMeshFilter.transform.localPosition;
+            paintSurfaceCollider.transform.localRotation =
+                activeMeshFilter.transform.localRotation;
+            paintSurfaceCollider.transform.localScale =
+                activeMeshFilter.transform.localScale;
+        }
+
+        /// <summary>
+        /// Находит активный меш среди дочерних визуальных вариантов овцы.
+        /// </summary>
+        private MeshFilter FindActiveMeshFilter()
+        {
+            MeshFilter[] meshFilters =
+                GetComponentsInChildren<MeshFilter>(true);
+
+            for (int i = 0; i < meshFilters.Length; i++)
+            {
+                MeshFilter meshFilter = meshFilters[i];
+
+                if (meshFilter.gameObject == paintSurfaceCollider.gameObject)
+                {
+                    continue;
+                }
+
+                if (meshFilter.gameObject.activeInHierarchy &&
+                    meshFilter.sharedMesh != null)
+                {
+                    return meshFilter;
+                }
+            }
+
+            return null;
         }
 
         /// <summary>
