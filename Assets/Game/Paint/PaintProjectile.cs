@@ -176,7 +176,7 @@ namespace Game.Paint
 
             Vector2 paintUV =
                 hit.collider is MeshCollider
-                    ? hit.textureCoord
+                    ? hit.textureCoord2
                     : Vector2.zero;
 
             PaintImpactData impact =

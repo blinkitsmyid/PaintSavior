@@ -6,6 +6,8 @@ Shader "Game/Paint/SheepPaint"
         _BaseColor ("Base Color", Color) = (0.8, 0.8, 0.8, 1)
         _PaintBlobMask ("Paint Blob Mask", 2D) = "white" {}
         _PaintCoverageTexture ("Paint Coverage Texture", 2D) = "black" {}
+        _PaintSpreadTexture ("Paint Spread Texture", 2D) = "black" {}
+        _PaintSpreadProgress ("Paint Spread Progress", Range(0,1)) = 0
 
         _LeftColor ("Left Color", Color) = (1, 1, 1, 1)
         _RightColor ("Right Color", Color) = (1, 1, 1, 1)
@@ -42,6 +44,7 @@ Shader "Game/Paint/SheepPaint"
                 float4 positionOS : POSITION;
                 float3 normalOS : NORMAL;
                 float2 uv : TEXCOORD0;
+                float2 paintUV : TEXCOORD1;
             };
 
             struct Varyings
@@ -50,12 +53,14 @@ Shader "Game/Paint/SheepPaint"
                 float3 positionOS : TEXCOORD0;
                 float3 normalOS : TEXCOORD1;
                 float2 uv : TEXCOORD2;
+                float2 paintUV : TEXCOORD3;
             };
 
             CBUFFER_START(UnityPerMaterial)
 
                 float4 _BaseMap_ST;
                 float4 _BaseColor;
+                float _PaintSpreadProgress;
 
                 float4 _LeftColor;
                 float4 _RightColor;
@@ -77,6 +82,9 @@ Shader "Game/Paint/SheepPaint"
 
             TEXTURE2D(_PaintCoverageTexture);
             SAMPLER(sampler_PaintCoverageTexture);
+
+            TEXTURE2D(_PaintSpreadTexture);
+            SAMPLER(sampler_PaintSpreadTexture);
 
             float4 _LeftBlobs[MAX_BLOBS];
             float4 _RightBlobs[MAX_BLOBS];
@@ -106,6 +114,9 @@ Shader "Game/Paint/SheepPaint"
 
                 output.uv =
                     input.uv;
+
+                output.paintUV =
+                    input.paintUV;
 
                 return output;
             }
@@ -218,7 +229,7 @@ Shader "Game/Paint/SheepPaint"
                     SAMPLE_TEXTURE2D(
                         _PaintCoverageTexture,
                         sampler_PaintCoverageTexture,
-                        input.uv
+                        input.paintUV
                     );
 
                 color =
@@ -226,6 +237,21 @@ Shader "Game/Paint/SheepPaint"
                         color,
                         paintCoverage.rgb,
                         saturate(paintCoverage.a)
+                    );
+
+                float4 paintSpread =
+                    SAMPLE_TEXTURE2D(
+                        _PaintSpreadTexture,
+                        sampler_PaintSpreadTexture,
+                        input.paintUV
+                    );
+
+                color =
+                    lerp(
+                        color,
+                        paintSpread.rgb,
+                        saturate(_PaintSpreadProgress) *
+                        saturate(paintSpread.a)
                     );
 
                 return half4(

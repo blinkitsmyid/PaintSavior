@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 
 using Game.Sheep.AI;
 
@@ -19,6 +20,12 @@ namespace Game.Paint
         private static readonly int PaintCoverageTextureId =
             Shader.PropertyToID("_PaintCoverageTexture");
 
+        private static readonly int PaintSpreadTextureId =
+            Shader.PropertyToID("_PaintSpreadTexture");
+
+        private static readonly int PaintSpreadProgressId =
+            Shader.PropertyToID("_PaintSpreadProgress");
+
         private static readonly int StampDataId =
             Shader.PropertyToID("_StampData");
 
@@ -29,12 +36,22 @@ namespace Game.Paint
         [SerializeField] private int paintTextureSize = 256;
 
         private SheepPaintController _paintController;
+        private SheepPaintCoverage _paintCoverage;
         private SheepWoolGrowth _woolGrowth;
         private MaterialPropertyBlock _propertyBlock;
         private Renderer _renderer;
         private Material _stampMaterial;
         private RenderTexture _paintTexture;
         private RenderTexture _paintScratchTexture;
+        private bool _coverageReadbackInFlight;
+        private bool _coverageReadbackQueued;
+        private bool _isDestroying;
+
+        /// <summary>
+        /// Возвращает фактический размер текстур, используемый Renderer для маски покраски.
+        /// </summary>
+        public int PaintTextureSize =>
+            Mathf.Max(32, paintTextureSize);
 
         /// <summary>
         /// Находит зависимости и создаёт ресурсы постоянной UV-маски овцы.
@@ -43,6 +60,9 @@ namespace Game.Paint
         {
             _paintController =
                 GetComponent<SheepPaintController>();
+
+            _paintCoverage =
+                GetComponent<SheepPaintCoverage>();
 
             _woolGrowth =
                 GetComponent<SheepWoolGrowth>();
@@ -200,6 +220,7 @@ namespace Game.Paint
         {
             StampBlob(blob);
             ApplyPaintTextureToSurface();
+            RequestCoverageReadback();
         }
 
         /// <summary>
@@ -394,6 +415,7 @@ namespace Game.Paint
             }
 
             ApplyPaintTextureToSurface();
+            RequestCoverageReadback();
         }
 
         /// <summary>
@@ -417,6 +439,48 @@ namespace Game.Paint
 
             _renderer.SetPropertyBlock(
                 _propertyBlock
+            );
+        }
+
+        /// <summary>
+        /// Передаёт целевую карту и степень её смешивания в активный материал овцы.
+        /// </summary>
+        public void ApplySpreadVisual(
+            Texture spreadTexture,
+            float progress)
+        {
+            if (_renderer == null)
+            {
+                return;
+            }
+
+            _renderer.GetPropertyBlock(
+                _propertyBlock
+            );
+
+            _propertyBlock.SetTexture(
+                PaintSpreadTextureId,
+                spreadTexture
+            );
+
+            _propertyBlock.SetFloat(
+                PaintSpreadProgressId,
+                Mathf.Clamp01(progress)
+            );
+
+            _renderer.SetPropertyBlock(
+                _propertyBlock
+            );
+        }
+
+        /// <summary>
+        /// Отключает визуальное распространение и возвращает отображение к отдельным кляксам.
+        /// </summary>
+        public void ResetSpreadVisual()
+        {
+            ApplySpreadVisual(
+                Texture2D.blackTexture,
+                0f
             );
         }
 
@@ -463,6 +527,8 @@ namespace Game.Paint
         /// </summary>
         private void OnDestroy()
         {
+            _isDestroying = true;
+
             ReleasePaintTexture(_paintTexture);
             ReleasePaintTexture(_paintScratchTexture);
 
@@ -470,6 +536,97 @@ namespace Game.Paint
             {
                 Destroy(_stampMaterial);
             }
+
+        }
+
+        /// <summary>
+        /// Запрашивает асинхронное чтение альфа-канала текущей маски покрытия.
+        /// </summary>
+        private void RequestCoverageReadback()
+        {
+            if (_paintCoverage == null ||
+                _paintTexture == null ||
+                _isDestroying)
+            {
+                return;
+            }
+
+            if (_coverageReadbackInFlight)
+            {
+                _coverageReadbackQueued = true;
+                return;
+            }
+
+            _coverageReadbackInFlight = true;
+
+            AsyncGPUReadback.Request(
+                _paintTexture,
+                0,
+                TextureFormat.RGBA32,
+                OnCoverageReadbackCompleted
+            );
+        }
+
+        /// <summary>
+        /// Обрабатывает результат чтения маски и передаёт рассчитанное покрытие компоненту состояния.
+        /// </summary>
+        private void OnCoverageReadbackCompleted(
+            AsyncGPUReadbackRequest request)
+        {
+            _coverageReadbackInFlight = false;
+
+            if (!_isDestroying &&
+                !request.hasError &&
+                _paintCoverage != null)
+            {
+                var data =
+                    request.GetData<byte>();
+
+                float coverage =
+                    CalculateCoverage(data);
+
+                _paintCoverage.SetCoverage(coverage);
+            }
+
+            if (!_coverageReadbackQueued || _isDestroying)
+            {
+                _coverageReadbackQueued = false;
+                return;
+            }
+
+            _coverageReadbackQueued = false;
+            RequestCoverageReadback();
+        }
+
+        /// <summary>
+        /// Вычисляет долю пикселей с ненулевым альфа-каналом в RGBA32-маске.
+        /// </summary>
+        private static float CalculateCoverage(
+            Unity.Collections.NativeArray<byte> data)
+        {
+            const int BytesPerPixel = 4;
+            const byte AlphaCutoff = 2;
+
+            int pixelCount =
+                data.Length / BytesPerPixel;
+
+            if (pixelCount == 0)
+            {
+                return 0f;
+            }
+
+            int coveredPixelCount = 0;
+
+            for (int i = 3; i < data.Length; i += BytesPerPixel)
+            {
+                if (data[i] > AlphaCutoff)
+                {
+                    coveredPixelCount++;
+                }
+            }
+
+            return coveredPixelCount /
+                (float)pixelCount;
         }
 
         /// <summary>

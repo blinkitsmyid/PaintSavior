@@ -3,6 +3,7 @@ using System;
 using UnityEngine;
 
 using Game.Animals.Core;
+using Game.Items;
 using Game.Paint;
 
 namespace Game.Sheep.AI
@@ -19,6 +20,8 @@ namespace Game.Sheep.AI
         [SerializeField] private SheepWaterEnvironment waterEnvironment;
         [SerializeField] private SheepWoolGrowth woolGrowth;
         [SerializeField] private SheepPaintController paintController;
+        [SerializeField] private SheepPaintCoverage paintCoverage;
+        [SerializeField] private SheepWoolDropSpawner woolDropSpawner;
         [SerializeField] private Transform playerTarget;
 
         [Header("Idle")]
@@ -98,22 +101,23 @@ namespace Game.Sheep.AI
             _stateMachine?.CurrentStateId ?? SheepStateId.None;
 
         /// <summary>
-        /// Проверяет, выполнено ли требование по покраске с учётом временного режима тестирования.
+        /// Проверяет, достигнут ли порог покрытия, необходимый для стрижки.
         /// </summary>
         private bool HasRequiredPaintForShearing()
         {
-            if (paintController == null)
-            {
-                return false;
-            }
-
-            if (paintController.AreAllSidesPainted())
+            if (paintCoverage != null &&
+                paintCoverage.IsThresholdReached)
             {
                 return true;
             }
 
-            return allowShearingAfterAnyPaintHitForTesting &&
-                paintController.BlobsInOrder.Count > 0;
+            if (!allowShearingAfterAnyPaintHitForTesting ||
+                paintController == null)
+            {
+                return false;
+            }
+
+            return paintController.BlobsInOrder.Count > 0;
         }
 
         public event Action<SheepStateId, SheepStateId> StateChanged;
@@ -151,6 +155,16 @@ namespace Game.Sheep.AI
             if (paintController == null)
             {
                 paintController = GetComponent<SheepPaintController>();
+            }
+
+            if (paintCoverage == null)
+            {
+                paintCoverage = GetComponent<SheepPaintCoverage>();
+            }
+
+            if (woolDropSpawner == null)
+            {
+                woolDropSpawner = GetComponent<SheepWoolDropSpawner>();
             }
 
             _stateMachine = new SheepStateMachine();
@@ -453,6 +467,7 @@ namespace Game.Sheep.AI
         /// </summary>
         private void FinishShearing()
         {
+            woolDropSpawner?.SpawnCurrentWool();
             woolGrowth?.ResetToShaved();
             _contaminationState.CancelWashIntent();
             paintController?.ClearAllBlobs();

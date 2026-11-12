@@ -26,6 +26,11 @@ namespace Game.Sheep.AI
         [SerializeField] private GameObject mediumWoolVisual;
         [SerializeField] private GameObject fullWoolVisual;
 
+        [Header("Wool Clump Drops")]
+        [SerializeField, Min(0)] private int shavedWoolClumpCount;
+        [SerializeField, Min(0)] private int mediumWoolClumpCount = 2;
+        [SerializeField, Min(0)] private int fullWoolClumpCount = 4;
+
         [Header("Debug")]
         [SerializeField] private bool logGrowthProgress = true;
 
@@ -38,22 +43,57 @@ namespace Game.Sheep.AI
         public event Action<SheepNeedType> NeedCompleted;
         public event Action<WoolGrowthStage, WoolGrowthStage> StageChanged;
 
+        /// <summary>
+        /// Возвращает настроенное количество клочков для указанной стадии шерсти.
+        /// </summary>
+        public int GetWoolClumpCount(WoolGrowthStage stage)
+        {
+            return stage switch
+            {
+                WoolGrowthStage.Shaved => Mathf.Max(
+                    0,
+                    shavedWoolClumpCount
+                ),
+                WoolGrowthStage.Medium => Mathf.Max(
+                    0,
+                    mediumWoolClumpCount
+                ),
+                WoolGrowthStage.Full => Mathf.Max(
+                    0,
+                    fullWoolClumpCount
+                ),
+                _ => 0
+            };
+        }
+
+        /// <summary>
+        /// Устанавливает начальную стадию шерсти и активирует соответствующую визуальную модель.
+        /// </summary>
         private void Awake()
         {
             CurrentStage = initialStage;
             ApplyVisual();
         }
 
+        /// <summary>
+        /// Проверяет, была ли указанная потребность выполнена в текущем цикле роста.
+        /// </summary>
         public bool IsNeedCompleted(SheepNeedType need)
         {
             return (_completedNeeds & ToFlag(need)) != 0;
         }
 
+        /// <summary>
+        /// Проверяет, может ли потребность быть засчитана в текущем цикле роста.
+        /// </summary>
         public bool CanCompleteNeed(SheepNeedType need)
         {
             return !IsNeedCompleted(need);
         }
 
+        /// <summary>
+        /// Засчитывает потребность и при завершении полного цикла переводит шерсть на следующую стадию.
+        /// </summary>
         public bool TryCompleteNeed(SheepNeedType need)
         {
             if (!CanCompleteNeed(need))
@@ -108,6 +148,9 @@ namespace Game.Sheep.AI
             return true;
         }
 
+        /// <summary>
+        /// Возвращает шерсть к бритой стадии и сбрасывает прогресс текущего цикла.
+        /// </summary>
         public void ResetToShaved()
         {
             WoolGrowthStage previousStage = CurrentStage;
@@ -122,6 +165,9 @@ namespace Game.Sheep.AI
             }
         }
 
+        /// <summary>
+        /// Включает только ту визуальную модель, которая соответствует текущей стадии шерсти.
+        /// </summary>
         private void ApplyVisual()
         {
             SetVisualActive(
@@ -138,6 +184,9 @@ namespace Game.Sheep.AI
             );
         }
 
+        /// <summary>
+        /// Преобразует тип потребности в соответствующий бит внутреннего флага прогресса.
+        /// </summary>
         private static CompletedNeeds ToFlag(SheepNeedType need)
         {
             return need switch
@@ -149,6 +198,9 @@ namespace Game.Sheep.AI
             };
         }
 
+        /// <summary>
+        /// Подсчитывает количество завершённых потребностей текущего цикла роста.
+        /// </summary>
         private int GetCompletedNeedCount()
         {
             int count = 0;
@@ -171,6 +223,9 @@ namespace Game.Sheep.AI
             return count;
         }
 
+        /// <summary>
+        /// Безопасно меняет активность визуального объекта, если ссылка на него задана.
+        /// </summary>
         private static void SetVisualActive(GameObject visual, bool isActive)
         {
             if (visual != null)

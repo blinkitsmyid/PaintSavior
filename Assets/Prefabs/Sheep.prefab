@@ -465,6 +465,9 @@ GameObject:
   - component: {fileID: 4021681484460552942}
   - component: {fileID: 3066536592464869505}
   - component: {fileID: 4917817185056350832}
+  - component: {fileID: 924024189985106601}
+  - component: {fileID: 840391484769926415}
+  - component: {fileID: 671274513191457114}
   m_Layer: 0
   m_Name: Sheep
   m_TagString: Untagged
@@ -490,6 +493,8 @@ Transform:
   - {fileID: 2100670724284691803}
   - {fileID: 7123551348188045068}
   - {fileID: 624528968163288741}
+  - {fileID: 6470120424909886441}
+  - {fileID: 2155328354267453278}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &-859088932218401245
@@ -537,7 +542,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8df326033baf46e48bf8f213a9ebdd65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.Paint.SheepPaintRenderer
-  paintTextureSize: 256
+  paintTextureSize: 1024
 --- !u!114 &862676375549233464
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -558,6 +563,8 @@ MonoBehaviour:
   waterEnvironment: {fileID: 0}
   woolGrowth: {fileID: 4021681484460552942}
   paintController: {fileID: -859088932218401245}
+  paintCoverage: {fileID: 0}
+  woolDropSpawner: {fileID: 0}
   playerTarget: {fileID: 0}
   minimumIdleDuration: 1.5
   maximumIdleDuration: 4
@@ -578,7 +585,7 @@ MonoBehaviour:
   shearingDuration: 2
   logStateTransitions: 1
   logPlayerReactions: 1
-  allowShearingAfterAnyPaintHitForTesting: 1
+  allowShearingAfterAnyPaintHitForTesting: 0
 --- !u!195 &4954853492857218681
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -633,6 +640,9 @@ MonoBehaviour:
   shavedWoolVisual: {fileID: 6043379857744361081}
   mediumWoolVisual: {fileID: 5873447799867744000}
   fullWoolVisual: {fileID: 4149233347763606969}
+  shavedWoolClumpCount: 0
+  mediumWoolClumpCount: 2
+  fullWoolClumpCount: 4
   logGrowthProgress: 1
 --- !u!114 &3066536592464869505
 MonoBehaviour:
@@ -668,6 +678,52 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1.3181868, y: 1.2444584, z: 3.043217}
   m_Center: {x: -0.01903357, y: 0.6418747, z: 0.22766763}
+--- !u!114 &924024189985106601
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4894181608101839767}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d1b4febf9076bf4681cfadc8db5997d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Paint.SheepPaintCoverage
+  coverageThreshold: 0.1
+  currentCoverage: 0
+--- !u!114 &840391484769926415
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4894181608101839767}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6f09a17923ec1f24fafc2c7cfab6b676, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Paint.SheepPaintSpreadRenderer
+  paintRenderer: {fileID: 0}
+  spreadDuration: 1.5
+--- !u!114 &671274513191457114
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4894181608101839767}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ec8e263cf1d49840b9933fa06f215c3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Items.SheepWoolDropSpawner
+  woolClumpPrefab: {fileID: 6838697966928475064, guid: d6877d4e2dbaba74ab7ce382c028f1b9, type: 3}
+  dropOrigin: {fileID: 0}
+  horizontalSpawnRadius: 0.35
+  verticalSpawnOffset: 0.15
+  randomRotationAmount: 1
+  logSpawn: 0
 --- !u!1 &5873447799867744000
 GameObject:
   m_ObjectHideFlags: 0
@@ -848,3 +904,147 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &6288525569677866954
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6470120424909886441}
+  - component: {fileID: 8168938279498657171}
+  - component: {fileID: 2286158021265442590}
+  - component: {fileID: 800786379912197437}
+  m_Layer: 0
+  m_Name: Face
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6470120424909886441
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6288525569677866954}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2243593378699098597}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!33 &8168938279498657171
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6288525569677866954}
+  m_Mesh: {fileID: 2136982261520300157, guid: b043e28a893cfa24092b165d7f69f970, type: 3}
+--- !u!23 &2286158021265442590
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6288525569677866954}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 0}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!64 &800786379912197437
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6288525569677866954}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 2136982261520300157, guid: b043e28a893cfa24092b165d7f69f970, type: 3}
+--- !u!1 &7549380781617118546
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2155328354267453278}
+  m_Layer: 0
+  m_Name: SheepWoolDropSpawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2155328354267453278
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7549380781617118546}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2243593378699098597}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
