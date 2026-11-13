@@ -1,3 +1,5 @@
+using System.Collections;
+
 using UnityEngine;
 
 using Game.Paint;
@@ -25,7 +27,12 @@ namespace Game.Items
 
         [Header("Spawn")]
         [SerializeField, Min(0f)] private float horizontalSpawnRadius = 0.35f;
-        [SerializeField, Min(0f)] private float verticalSpawnOffset = 0.15f;
+        [SerializeField] private LayerMask groundLayerMask = ~0;
+        [SerializeField, Min(0f)] private float groundProbeHeight = 2f;
+        [SerializeField, Min(0f)] private float groundProbeDistance = 10f;
+        [SerializeField, Min(0f)] private float landingOffset = 0.03f;
+        [SerializeField, Min(0f)] private float jumpHeight = 0.35f;
+        [SerializeField, Min(0f)] private float jumpDuration = 0.45f;
         [SerializeField, Range(0f, 1f)] private float randomRotationAmount = 1f;
 
         [Header("Debug")]
@@ -33,6 +40,8 @@ namespace Game.Items
 
         private SheepWoolGrowth _woolGrowth;
         private SheepPaintController _paintController;
+        private readonly RaycastHit[] _groundHits =
+            new RaycastHit[16];
 
         /// <summary>
         /// Находит компоненты овцы, необходимые для определения стадии и цветов шерсти.
@@ -97,11 +106,32 @@ namespace Game.Items
             Vector2 randomOffset =
                 Random.insideUnitCircle * horizontalSpawnRadius;
 
-            Vector3 spawnPosition =
+            Vector3 targetProbePosition =
                 dropOrigin.position +
                 dropOrigin.right * randomOffset.x +
-                dropOrigin.forward * randomOffset.y +
-                dropOrigin.up * verticalSpawnOffset;
+                dropOrigin.forward * randomOffset.y;
+
+            bool hasStartGround =
+                TryFindGroundPosition(
+                    dropOrigin.position,
+                    out Vector3 startPosition
+                );
+
+            bool hasTargetGround =
+                TryFindGroundPosition(
+                    targetProbePosition,
+                    out Vector3 targetPosition
+                );
+
+            if (!hasStartGround)
+            {
+                startPosition = dropOrigin.position;
+            }
+
+            if (!hasTargetGround)
+            {
+                targetPosition = targetProbePosition;
+            }
 
             Quaternion spawnRotation =
                 Quaternion.Slerp(
@@ -113,7 +143,7 @@ namespace Game.Items
             WoolClumpPickup clump =
                 Instantiate(
                     woolClumpPrefab,
-                    spawnPosition,
+                    startPosition,
                     spawnRotation
                 );
 
@@ -121,6 +151,115 @@ namespace Game.Items
                 stage,
                 color
             );
+
+            StartCoroutine(
+                AnimateClumpJump(
+                    clump.transform,
+                    startPosition,
+                    targetPosition,
+                    hasStartGround && hasTargetGround
+                )
+            );
+
+            if ((!hasStartGround || !hasTargetGround) && logSpawn)
+            {
+                Debug.LogWarning(
+                    $"{name}: ground was not found for a wool clump. " +
+                    "Check Ground Layer Mask and Plane collider.",
+                    this
+                );
+            }
+        }
+
+        /// <summary>
+        /// Перемещает клочок по короткой дуге от овцы к точке на поверхности.
+        /// </summary>
+        private IEnumerator AnimateClumpJump(
+            Transform clumpTransform,
+            Vector3 startPosition,
+            Vector3 targetPosition,
+            bool hasGroundPoints)
+        {
+            if (clumpTransform == null)
+            {
+                yield break;
+            }
+
+            if (!hasGroundPoints || jumpDuration <= 0f)
+            {
+                clumpTransform.position = targetPosition;
+                yield break;
+            }
+
+            float elapsedTime = 0f;
+
+            while (elapsedTime < jumpDuration)
+            {
+                float progress =
+                    elapsedTime / jumpDuration;
+
+                Vector3 position =
+                    Vector3.Lerp(
+                        startPosition,
+                        targetPosition,
+                        progress
+                    );
+
+                position +=
+                    Vector3.up *
+                    (Mathf.Sin(progress * Mathf.PI) * jumpHeight);
+
+                clumpTransform.position = position;
+                elapsedTime += Time.deltaTime;
+                yield return null;
+            }
+
+            clumpTransform.position = targetPosition;
+        }
+
+        /// <summary>
+        /// Находит ближайшую подходящую поверхность под указанной точкой и возвращает позицию с небольшим отступом.
+        /// </summary>
+        private bool TryFindGroundPosition(
+            Vector3 probePosition,
+            out Vector3 groundPosition)
+        {
+            Vector3 rayOrigin =
+                probePosition + Vector3.up * groundProbeHeight;
+
+            int hitCount =
+                Physics.RaycastNonAlloc(
+                    rayOrigin,
+                    Vector3.down,
+                    _groundHits,
+                    groundProbeDistance,
+                    groundLayerMask,
+                    QueryTriggerInteraction.Ignore
+                );
+
+            float closestDistance = float.PositiveInfinity;
+            bool foundGround = false;
+            groundPosition = probePosition;
+
+            for (int i = 0; i < hitCount; i++)
+            {
+                RaycastHit hit =
+                    _groundHits[i];
+
+                if (hit.collider == null ||
+                    hit.collider.transform.IsChildOf(transform) ||
+                    hit.distance >= closestDistance)
+                {
+                    continue;
+                }
+
+                closestDistance = hit.distance;
+                groundPosition =
+                    hit.point + hit.normal * landingOffset;
+                foundGround = true;
+            }
+
+            return foundGround;
         }
 
         /// <summary>

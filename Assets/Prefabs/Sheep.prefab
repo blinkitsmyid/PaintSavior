@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 624528968163288741}
   - component: {fileID: 5747289147321047828}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: PaintSurfaceCollider
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -65,7 +65,7 @@ GameObject:
   - component: {fileID: 3660593486881835915}
   - component: {fileID: 6747995739967655251}
   - component: {fileID: 6366824764557387504}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: LeftSide
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -132,7 +132,7 @@ GameObject:
   - component: {fileID: 8648779749366101837}
   - component: {fileID: 3680757560140393755}
   - component: {fileID: 1247798001046370387}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: RightSide
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -197,7 +197,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7123551348188045068}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: PaintHitZones
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -234,7 +234,7 @@ GameObject:
   - component: {fileID: 3041593709821177684}
   - component: {fileID: 364799119803236182}
   - component: {fileID: 6612791467781541998}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Tail
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -301,7 +301,7 @@ GameObject:
   - component: {fileID: 7769930546022409891}
   - component: {fileID: 3749361611434727939}
   - component: {fileID: 82741199959072855}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Back
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -368,7 +368,7 @@ GameObject:
   - component: {fileID: 2100670724284691803}
   - component: {fileID: 5099208327392741832}
   - component: {fileID: 6363835477783065370}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Visual3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -468,7 +468,8 @@ GameObject:
   - component: {fileID: 924024189985106601}
   - component: {fileID: 840391484769926415}
   - component: {fileID: 671274513191457114}
-  m_Layer: 0
+  - component: {fileID: 4938002076890330931}
+  m_Layer: 6
   m_Name: Sheep
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -721,9 +722,32 @@ MonoBehaviour:
   woolClumpPrefab: {fileID: 6838697966928475064, guid: d6877d4e2dbaba74ab7ce382c028f1b9, type: 3}
   dropOrigin: {fileID: 0}
   horizontalSpawnRadius: 0.35
-  verticalSpawnOffset: 0.15
+  groundLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  groundProbeHeight: 2
+  groundProbeDistance: 10
+  landingOffset: 0.03
+  jumpHeight: 0.35
+  jumpDuration: 0.45
   randomRotationAmount: 1
   logSpawn: 0
+--- !u!114 &4938002076890330931
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4894181608101839767}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1eb23060f212e114d823a6200a802eb1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Interaction.OutlineTarget
+  targetRenderers: []
+  outlineLayerMask:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!1 &5873447799867744000
 GameObject:
   m_ObjectHideFlags: 0
@@ -735,7 +759,7 @@ GameObject:
   - component: {fileID: 1712608516472926235}
   - component: {fileID: 8324355100582977331}
   - component: {fileID: 2794355692485872345}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Visual2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -825,7 +849,7 @@ GameObject:
   - component: {fileID: 7563578384292324621}
   - component: {fileID: 3080480273744626403}
   - component: {fileID: 3985748147852466808}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Visual
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -916,7 +940,7 @@ GameObject:
   - component: {fileID: 8168938279498657171}
   - component: {fileID: 2286158021265442590}
   - component: {fileID: 800786379912197437}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Face
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1026,7 +1050,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2155328354267453278}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: SheepWoolDropSpawner
   m_TagString: Untagged
   m_Icon: {fileID: 0}
