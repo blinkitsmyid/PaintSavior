@@ -1,5 +1,7 @@
 using UnityEngine;
 
+using Game.Audio;
+
 namespace Game.Items
 {
     /// <summary>
@@ -15,6 +17,12 @@ namespace Game.Items
         [SerializeField] private AudioSource collectionAudioSource;
         [SerializeField] private AudioClip collectionAudioClip;
         [SerializeField] private ParticleSystem leafParticles;
+
+        [Header("Audio Service")]
+        [Tooltip("Необязательный AudioCue для нового общего аудиосервиса.")]
+        [SerializeField] private AudioCue collectionCue;
+        [Tooltip("Общий сервис воспроизведения звуков. Если не задан, ищется один раз при успешном сборе.")]
+        [SerializeField] private AudioService audioService;
 
         public BerryType Type => berryType;
 
@@ -62,7 +70,11 @@ namespace Game.Items
         /// </summary>
         private void PlayCollectionFeedback()
         {
-            if (collectionAudioSource != null &&
+            if (collectionCue != null)
+            {
+                PlayCollectionAudio();
+            }
+            else if (collectionAudioSource != null &&
                 collectionAudioClip != null)
             {
                 collectionAudioSource.PlayOneShot(
@@ -73,6 +85,43 @@ namespace Game.Items
             if (leafParticles != null)
             {
                 leafParticles.Play(true);
+            }
+        }
+
+        /// <summary>
+        /// Воспроизводит новый AudioCue сбора ягод через общий AudioService.
+        /// </summary>
+        private void PlayCollectionAudio()
+        {
+            ResolveAudioService();
+
+            if (audioService == null)
+            {
+                return;
+            }
+
+            audioService.TryPlay(
+                collectionCue,
+                transform.position,
+                transform
+            );
+        }
+
+        /// <summary>
+        /// Находит AudioService в родителях или сцене, если он не задан вручную.
+        /// </summary>
+        private void ResolveAudioService()
+        {
+            if (audioService != null)
+            {
+                return;
+            }
+
+            audioService = GetComponentInParent<AudioService>();
+
+            if (audioService == null)
+            {
+                audioService = FindFirstObjectByType<AudioService>();
             }
         }
     }

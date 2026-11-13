@@ -1,5 +1,7 @@
 using UnityEngine;
 
+using Game.Audio;
+
 namespace Game.Paint
 {
     public sealed class PaintProjectile : MonoBehaviour
@@ -15,6 +17,12 @@ namespace Game.Paint
         [SerializeField] private LayerMask collisionMask = ~0;
         [SerializeField] private GameObject impactEffectPrefab;
         [SerializeField, Min(0.1f)] private float impactEffectLifetime = 2f;
+
+        [Header("Audio")]
+        [Tooltip("Необязательный звук взрыва ягоды при столкновении с поверхностью.")]
+        [SerializeField] private AudioCue impactCue;
+        [Tooltip("Общий сервис воспроизведения звуков. Если не задан, ищется один раз при попадании.")]
+        [SerializeField] private AudioService audioService;
 
         private float _lifeTimer;
         private float _currentSpeed;
@@ -161,6 +169,7 @@ namespace Game.Paint
         /// </summary>
         private void HandleHit(RaycastHit hit)
         {
+            PlayImpactAudio(hit.point);
             SpawnImpactEffect(hit);
 
             IPaintReceiver receiver =
@@ -194,6 +203,48 @@ namespace Game.Paint
             );
 
             Destroy(gameObject);
+        }
+
+        /// <summary>
+        /// Воспроизводит звук взрыва ягоды в точке подтверждённого столкновения.
+        /// </summary>
+        private void PlayImpactAudio(
+            Vector3 impactPosition)
+        {
+            if (impactCue == null)
+            {
+                return;
+            }
+
+            ResolveAudioService();
+
+            if (audioService == null)
+            {
+                return;
+            }
+
+            audioService.TryPlay(
+                impactCue,
+                impactPosition
+            );
+        }
+
+        /// <summary>
+        /// Находит AudioService в родителях или сцене, если он не задан вручную.
+        /// </summary>
+        private void ResolveAudioService()
+        {
+            if (audioService != null)
+            {
+                return;
+            }
+
+            audioService = GetComponentInParent<AudioService>();
+
+            if (audioService == null)
+            {
+                audioService = FindFirstObjectByType<AudioService>();
+            }
         }
 
         /// <summary>

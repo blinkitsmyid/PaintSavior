@@ -420,6 +420,8 @@ MonoBehaviour:
   collectionAudioSource: {fileID: 0}
   collectionAudioClip: {fileID: 0}
   leafParticles: {fileID: 0}
+  collectionCue: {fileID: 0}
+  audioService: {fileID: 0}
 --- !u!65 &324783957
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -944,6 +946,8 @@ MonoBehaviour:
   collectionAudioSource: {fileID: 0}
   collectionAudioClip: {fileID: 0}
   leafParticles: {fileID: 0}
+  collectionCue: {fileID: 11400000, guid: ddaac9c6ea1316b4fb4a7444aa7d1c4c, type: 2}
+  audioService: {fileID: 1367189283}
 --- !u!65 &592031314
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3143,6 +3147,7 @@ GameObject:
   - component: {fileID: 1141241169}
   - component: {fileID: 1141241168}
   - component: {fileID: 1141241167}
+  - component: {fileID: 1141241172}
   m_Layer: 0
   m_Name: Cube
   m_TagString: Untagged
@@ -3262,6 +3267,22 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1141241172
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1141241166}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d304509714440fea0d73df97f8fed79, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Audio.AudioEmitter
+  cue: {fileID: 11400000, guid: ddaac9c6ea1316b4fb4a7444aa7d1c4c, type: 2}
+  playOnEnable: 1
+  followEmitter: 1
+  audioService: {fileID: 1367189283}
 --- !u!43 &1280459900
 Mesh:
   m_ObjectHideFlags: 0
@@ -3553,6 +3574,71 @@ Transform:
   - {fileID: 849165176}
   m_Father: {fileID: 819799266}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1367189280
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1367189282}
+  - component: {fileID: 1367189281}
+  - component: {fileID: 1367189283}
+  m_Layer: 0
+  m_Name: AudioSystem
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1367189281
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1367189280}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b3ca0d89e104f68aeea050229df9ed6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Audio.AudioSourcePool
+  initialSize: 12
+  maxSize: 32
+--- !u!4 &1367189282
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1367189280}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1367189283
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1367189280}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3ae8242309c45f381aca4818c5ec16e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Audio.AudioService
+  sourcePool: {fileID: 1367189281}
+  masterGroup: {fileID: 24300002, guid: e58095ed89166da4abf09d81007bc529, type: 2}
+  musicGroup: {fileID: -800024711884884242, guid: e58095ed89166da4abf09d81007bc529, type: 2}
+  ambienceGroup: {fileID: -5419970335741028385, guid: e58095ed89166da4abf09d81007bc529, type: 2}
+  sfxGroup: {fileID: -4495752170167834153, guid: e58095ed89166da4abf09d81007bc529, type: 2}
+  uiGroup: {fileID: -7146801284492303856, guid: e58095ed89166da4abf09d81007bc529, type: 2}
 --- !u!1 &1383581059
 GameObject:
   m_ObjectHideFlags: 0
@@ -3693,8 +3779,9 @@ GameObject:
   - component: {fileID: 1412336904}
   - component: {fileID: 1412336903}
   - component: {fileID: 1412336902}
+  - component: {fileID: 1412336907}
   m_Layer: 0
-  m_Name: Cube
+  m_Name: BushPrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3717,6 +3804,8 @@ MonoBehaviour:
   collectionAudioSource: {fileID: 0}
   collectionAudioClip: {fileID: 0}
   leafParticles: {fileID: 0}
+  collectionCue: {fileID: 0}
+  audioService: {fileID: 0}
 --- !u!65 &1412336903
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3810,6 +3899,22 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1563630795}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1412336907
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1412336901}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1eb23060f212e114d823a6200a802eb1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Interaction.OutlineTarget
+  targetRenderers: []
+  outlineLayerMask:
+    serializedVersion: 2
+    m_Bits: 2147483648
 --- !u!1 &1428667706
 GameObject:
   m_ObjectHideFlags: 0
@@ -5389,3 +5494,4 @@ SceneRoots:
   - {fileID: 33691338}
   - {fileID: 819799266}
   - {fileID: 1916150918}
+  - {fileID: 1367189282}

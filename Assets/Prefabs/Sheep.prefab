@@ -457,7 +457,6 @@ GameObject:
   m_Component:
   - component: {fileID: 2243593378699098597}
   - component: {fileID: -859088932218401245}
-  - component: {fileID: 7652597536079501428}
   - component: {fileID: 8228522854931629496}
   - component: {fileID: 862676375549233464}
   - component: {fileID: 4954853492857218681}
@@ -469,6 +468,7 @@ GameObject:
   - component: {fileID: 840391484769926415}
   - component: {fileID: 671274513191457114}
   - component: {fileID: 4938002076890330931}
+  - component: {fileID: 6168175104161328111}
   m_Layer: 6
   m_Name: Sheep
   m_TagString: Untagged
@@ -514,23 +514,6 @@ MonoBehaviour:
   minBlobSize: 0.03
   maxBlobSize: 0.06
   paintSurfaceCollider: {fileID: 5747289147321047828}
---- !u!114 &7652597536079501428
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4894181608101839767}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fae7a5c334ecae0448f7a9d895ce70fe, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Game.Paint.PaintBlobRenderer
-  paintController: {fileID: 0}
-  blobPrefab: {fileID: 0}
-  surfaceOffset: 0.01
-  minSize: 0.15
-  maxSize: 0.3
 --- !u!114 &8228522854931629496
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -748,6 +731,31 @@ MonoBehaviour:
   outlineLayerMask:
     serializedVersion: 2
     m_Bits: 0
+--- !u!114 &6168175104161328111
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4894181608101839767}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a0c8e9347df4f5c9d7f38f066e9e1c1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Audio.AnimalAudioPresenter
+  audioService: {fileID: 0}
+  followAnimal: 1
+  idleCue: {fileID: 0}
+  walkCue: {fileID: 0}
+  runCue: {fileID: 0}
+  eatCue: {fileID: 0}
+  drinkCue: {fileID: 0}
+  restCue: {fileID: 0}
+  scaredCue: {fileID: 0}
+  friendlyCue: {fileID: 0}
+  petCue: {fileID: 0}
+  washCue: {fileID: 0}
+  shearCue: {fileID: 0}
 --- !u!1 &5873447799867744000
 GameObject:
   m_ObjectHideFlags: 0

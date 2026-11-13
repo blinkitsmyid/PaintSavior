@@ -2,6 +2,7 @@ using System.Collections;
 
 using UnityEngine;
 
+using Game.Audio;
 using Game.Paint;
 using Game.Sheep.AI;
 
@@ -34,6 +35,12 @@ namespace Game.Items
         [SerializeField, Min(0f)] private float jumpHeight = 0.35f;
         [SerializeField, Min(0f)] private float jumpDuration = 0.45f;
         [SerializeField, Range(0f, 1f)] private float randomRotationAmount = 1f;
+
+        [Header("Audio")]
+        [Tooltip("Необязательный звук появления и падения одного клочка шерсти.")]
+        [SerializeField] private AudioCue woolDropCue;
+        [Tooltip("Общий сервис воспроизведения звуков. Если не задан, ищется один раз при создании клочка.")]
+        [SerializeField] private AudioService audioService;
 
         [Header("Debug")]
         [SerializeField] private bool logSpawn;
@@ -152,6 +159,8 @@ namespace Game.Items
                 color
             );
 
+            PlayWoolDropAudio(clump.transform);
+
             StartCoroutine(
                 AnimateClumpJump(
                     clump.transform,
@@ -168,6 +177,50 @@ namespace Game.Items
                     "Check Ground Layer Mask and Plane collider.",
                     this
                 );
+            }
+        }
+
+        /// <summary>
+        /// Воспроизводит звук для созданного клочка и прикрепляет источник к его движению.
+        /// </summary>
+        private void PlayWoolDropAudio(
+            Transform clumpTransform)
+        {
+            if (woolDropCue == null ||
+                clumpTransform == null)
+            {
+                return;
+            }
+
+            ResolveAudioService();
+
+            if (audioService == null)
+            {
+                return;
+            }
+
+            audioService.TryPlay(
+                woolDropCue,
+                clumpTransform.position,
+                clumpTransform
+            );
+        }
+
+        /// <summary>
+        /// Находит AudioService в родителях или сцене, если он не задан вручную.
+        /// </summary>
+        private void ResolveAudioService()
+        {
+            if (audioService != null)
+            {
+                return;
+            }
+
+            audioService = GetComponentInParent<AudioService>();
+
+            if (audioService == null)
+            {
+                audioService = FindFirstObjectByType<AudioService>();
             }
         }
 
