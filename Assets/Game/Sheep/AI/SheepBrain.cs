@@ -121,6 +121,8 @@ namespace Game.Sheep.AI
         }
 
         public event Action<SheepStateId, SheepStateId> StateChanged;
+        public event Action<bool> FriendlyChanged;
+        public event Action PetPerformed;
 
         /// <summary>
         /// Находит зависимости овцы и создаёт экземпляры её состояний.
@@ -917,6 +919,8 @@ namespace Game.Sheep.AI
                     );
                 }
 
+                PetPerformed?.Invoke();
+
                 return true;
             }
 
@@ -953,6 +957,7 @@ namespace Game.Sheep.AI
             }
 
             IsFriendly = friendly;
+            FriendlyChanged?.Invoke(IsFriendly);
 
             if (logPlayerReactions)
             {

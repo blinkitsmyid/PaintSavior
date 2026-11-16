@@ -21,6 +21,10 @@ namespace Game.Player
         [SerializeField] private LineRenderer leftBand;
         [SerializeField] private LineRenderer rightBand;
 
+        [Header("Visibility")]
+        [Tooltip("Показывать резинки в расслабленном состоянии, пока рогатка экипирована.")]
+        [SerializeField] private bool showBandsWhenEquipped = true;
+
         [Header("Motion")]
         [SerializeField, Min(0f)] private float maxPullDistance = 0.35f;
         [SerializeField, Min(0.1f)] private float followSpeed = 14f;
@@ -119,7 +123,14 @@ namespace Game.Player
                     restPosition
                 ) > 0.001f;
 
-            SetBandsEnabled(isAiming || isReturning);
+            bool shouldShowBands =
+                isAiming ||
+                isReturning ||
+                (showBandsWhenEquipped &&
+                    equipment != null &&
+                    equipment.IsSlingshotEquipped);
+
+            SetBandsEnabled(shouldShowBands);
             UpdateBandPositions();
         }
 

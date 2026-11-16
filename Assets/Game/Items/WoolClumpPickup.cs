@@ -1,3 +1,5 @@
+using System.Collections;
+
 using UnityEngine;
 
 using Game.Sheep.AI;
@@ -26,9 +28,17 @@ namespace Game.Items
         [Header("Visual")]
         [SerializeField] private Transform visualRoot;
 
+        [Header("Pickup")]
+        [Tooltip("Скорость притягивания клочка к игроку после входа в Trigger.")]
+        [SerializeField, Min(0.01f)] private float attractionSpeed = 8f;
+
+        [Tooltip("Расстояние до точки игрока, при котором клочок считается собранным.")]
+        [SerializeField, Min(0.01f)] private float collectionDistance = 0.1f;
+
         private SphereCollider _pickupCollider;
         private Renderer[] _visualRenderers;
         private MaterialPropertyBlock _propertyBlock;
+        private bool _isCollecting;
 
         /// <summary>
         /// Возвращает стадию шерсти, из которой был создан клочок.
@@ -80,6 +90,11 @@ namespace Game.Items
             }
 
             ConfigurePickupCollider();
+
+            attractionSpeed =
+                Mathf.Max(0.01f, attractionSpeed);
+            collectionDistance =
+                Mathf.Max(0.01f, collectionDistance);
         }
 
         /// <summary>
@@ -92,6 +107,106 @@ namespace Game.Items
             sourceStage = stage;
             woolColor = color;
             ApplyColor();
+        }
+
+        /// <summary>
+        /// Начинает притягивание клочка к игроку, если в его иерархии найден WoolInventory.
+        /// </summary>
+        private void OnTriggerEnter(
+            Collider other)
+        {
+            if (_isCollecting || other == null)
+            {
+                return;
+            }
+
+            WoolInventory inventory =
+                other.GetComponentInParent<WoolInventory>();
+
+            if (inventory == null)
+            {
+                return;
+            }
+
+            _isCollecting = true;
+
+            if (_pickupCollider != null)
+            {
+                _pickupCollider.enabled = false;
+            }
+
+            StartCoroutine(
+                CollectToInventory(
+                    inventory
+                )
+            );
+        }
+
+        /// <summary>
+        /// Перемещает клочок к игроку, добавляет его цвет в инвентарь и удаляет объект после сбора.
+        /// </summary>
+        private IEnumerator CollectToInventory(
+            WoolInventory inventory)
+        {
+            if (inventory == null)
+            {
+                ResetCollectionState();
+                yield break;
+            }
+
+            Transform target =
+                inventory.transform;
+
+            while (target != null)
+            {
+                Vector3 targetPosition =
+                    target.position;
+
+                transform.position =
+                    Vector3.MoveTowards(
+                        transform.position,
+                        targetPosition,
+                        attractionSpeed * Time.deltaTime
+                    );
+
+                float distance =
+                    Vector3.Distance(
+                        transform.position,
+                        targetPosition
+                    );
+
+                if (distance <= collectionDistance)
+                {
+                    bool added =
+                        inventory.TryAddWool(woolColor);
+
+                    if (added)
+                    {
+                        Destroy(gameObject);
+                        yield break;
+                    }
+
+                    ResetCollectionState();
+                    yield break;
+                }
+
+                yield return null;
+            }
+
+            ResetCollectionState();
+        }
+
+        /// <summary>
+        /// Возвращает клочок в состояние доступного подбора, если цель исчезла или сбор не завершился.
+        /// </summary>
+        private void ResetCollectionState()
+        {
+            _isCollecting = false;
+
+            if (_pickupCollider != null)
+            {
+                _pickupCollider.enabled = true;
+            }
         }
 
         /// <summary>

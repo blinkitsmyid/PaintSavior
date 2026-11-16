@@ -209,6 +209,32 @@ namespace Game.Items
         }
 
         /// <summary>
+        /// Выбирает первую доступную ягоду в порядке Red, Blue, Yellow и сообщает, найден ли боеприпас.
+        /// </summary>
+        public bool TrySelectFirstAvailableBerry()
+        {
+            for (int index = 0; index < (int)BerryType.Count; index++)
+            {
+                BerryType type =
+                    (BerryType)index;
+
+                if (!HasBerry(type))
+                {
+                    continue;
+                }
+
+                if (SelectedBerryType != type)
+                {
+                    TrySelectBerry(type);
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Возвращает индекс типа ягоды во внутренних массивах хранения.
         /// </summary>
         private static int GetIndex(

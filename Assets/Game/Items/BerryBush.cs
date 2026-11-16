@@ -1,6 +1,7 @@
 using UnityEngine;
 
 using Game.Audio;
+using Game.VFX;
 
 namespace Game.Items
 {
@@ -16,7 +17,16 @@ namespace Game.Items
         [Header("Collection Feedback")]
         [SerializeField] private AudioSource collectionAudioSource;
         [SerializeField] private AudioClip collectionAudioClip;
+        [Tooltip("Старый прямой ParticleSystem. Используется только как резервный вариант на время миграции.")]
         [SerializeField] private ParticleSystem leafParticles;
+
+        [Header("VFX")]
+        [Tooltip("Cue эффекта листвы, который будет запущен через общий ParticleEffectService.")]
+        [SerializeField] private ParticleEffectCue collectionEffectCue;
+        [Tooltip("Общий сервис запуска визуальных эффектов. Если не задан, ищется один раз при успешном сборе.")]
+        [SerializeField] private ParticleEffectService particleEffectService;
+        [Tooltip("Точка появления эффекта. Если не задана, используется Transform куста.")]
+        [SerializeField] private Transform collectionEffectPoint;
 
         [Header("Audio Service")]
         [Tooltip("Необязательный AudioCue для нового общего аудиосервиса.")]
@@ -82,10 +92,41 @@ namespace Game.Items
                 );
             }
 
-            if (leafParticles != null)
+            bool playedThroughService =
+                PlayCollectionEffect();
+
+            if (!playedThroughService && leafParticles != null)
             {
                 leafParticles.Play(true);
             }
+        }
+
+        /// <summary>
+        /// Запускает эффект сбора ягоды через общий сервис визуальных эффектов.
+        /// </summary>
+        private bool PlayCollectionEffect()
+        {
+            if (collectionEffectCue == null)
+            {
+                return false;
+            }
+
+            ResolveParticleEffectService();
+
+            if (particleEffectService == null)
+            {
+                return false;
+            }
+
+            Transform effectPoint =
+                collectionEffectPoint != null
+                    ? collectionEffectPoint
+                    : transform;
+
+            return particleEffectService.Play(
+                    collectionEffectCue,
+                    effectPoint.position,
+                    effectPoint.rotation) != null;
         }
 
         /// <summary>
@@ -122,6 +163,26 @@ namespace Game.Items
             if (audioService == null)
             {
                 audioService = FindFirstObjectByType<AudioService>();
+            }
+        }
+
+        /// <summary>
+        /// Находит ParticleEffectService в родителях или сцене, если он не назначен вручную.
+        /// </summary>
+        private void ResolveParticleEffectService()
+        {
+            if (particleEffectService != null)
+            {
+                return;
+            }
+
+            particleEffectService =
+                GetComponentInParent<ParticleEffectService>();
+
+            if (particleEffectService == null)
+            {
+                particleEffectService =
+                    FindFirstObjectByType<ParticleEffectService>();
             }
         }
     }

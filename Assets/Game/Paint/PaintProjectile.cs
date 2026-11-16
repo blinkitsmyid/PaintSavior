@@ -1,11 +1,18 @@
 using UnityEngine;
 
 using Game.Audio;
+using Game.VFX;
 
 namespace Game.Paint
 {
     public sealed class PaintProjectile : MonoBehaviour
     {
+        private static readonly int BaseColorId =
+            Shader.PropertyToID("_BaseColor");
+
+        private static readonly int ColorId =
+            Shader.PropertyToID("_Color");
+
         [Header("Movement")]
         [SerializeField] private float speed = 20f;
         [SerializeField] private float lifeTime = 3f;
@@ -15,8 +22,17 @@ namespace Game.Paint
         [Header("Hit Detection")]
         [SerializeField] private float castRadius = 0.08f;
         [SerializeField] private LayerMask collisionMask = ~0;
+        [Tooltip("Новый Cue взрыва ягоды, запускаемый через общий VFX-сервис.")]
+        [SerializeField] private ParticleEffectCue impactEffectCue;
+        [Tooltip("Общий сервис визуальных эффектов. Если не задан, ищется один раз при столкновении.")]
+        [SerializeField] private ParticleEffectService particleEffectService;
+        [Tooltip("Старый prefab эффекта столкновения. Используется как резервный вариант во время миграции.")]
         [SerializeField] private GameObject impactEffectPrefab;
         [SerializeField, Min(0.1f)] private float impactEffectLifetime = 2f;
+
+        [Header("Flight VFX")]
+        [Tooltip("Cue следа, который прикрепляется к ягоде на время полёта.")]
+        [SerializeField] private ParticleEffectCue flightEffectCue;
 
         [Header("Audio")]
         [Tooltip("Необязательный звук взрыва ягоды при столкновении с поверхностью.")]
@@ -24,15 +40,37 @@ namespace Game.Paint
         [Tooltip("Общий сервис воспроизведения звуков. Если не задан, ищется один раз при попадании.")]
         [SerializeField] private AudioService audioService;
 
+        [Header("Visual")]
+        [Tooltip("Renderer летящей ягоды. Если список пуст, Renderer ищутся внутри префаба.")]
+        [SerializeField] private Renderer[] visualRenderers;
+
         private float _lifeTimer;
         private float _currentSpeed;
         private Vector3 _velocity;
         private Vector3 _launchPosition;
         private Color _color;
         private Vector3 _sourcePosition;
+        private ParticleSystem _flightEffect;
+        private MaterialPropertyBlock _propertyBlock;
 
         private static readonly RaycastHit[] HitBuffer =
             new RaycastHit[16];
+
+        /// <summary>
+        /// Находит Renderer летящей ягоды и подготавливает переиспользуемый блок свойств материала.
+        /// </summary>
+        private void Awake()
+        {
+            if (visualRenderers == null ||
+                visualRenderers.Length == 0)
+            {
+                visualRenderers =
+                    GetComponentsInChildren<Renderer>(true);
+            }
+
+            _propertyBlock =
+                new MaterialPropertyBlock();
+        }
 
         /// <summary>
         /// Запускает снаряд с его настроенной в Inspector скоростью.
@@ -74,6 +112,8 @@ namespace Game.Paint
             Vector3 sourcePosition,
             float launchSpeed)
         {
+            StopFlightEffect();
+
             Vector3 safeDirection =
                 direction.sqrMagnitude > 0.0001f
                     ? direction.normalized
@@ -90,6 +130,48 @@ namespace Game.Paint
             _color = color;
             _sourcePosition = sourcePosition;
             _lifeTimer = lifeTime;
+
+            ApplyColor(_color);
+
+            StartFlightEffect();
+        }
+
+        /// <summary>
+        /// Применяет цвет выбранной ягоды к Renderer снаряда без создания нового материала.
+        /// </summary>
+        private void ApplyColor(
+            Color color)
+        {
+            if (visualRenderers == null ||
+                _propertyBlock == null)
+            {
+                return;
+            }
+
+            for (int index = 0; index < visualRenderers.Length; index++)
+            {
+                Renderer visualRenderer =
+                    visualRenderers[index];
+
+                if (visualRenderer == null)
+                {
+                    continue;
+                }
+
+                visualRenderer.GetPropertyBlock(
+                    _propertyBlock);
+
+                _propertyBlock.SetColor(
+                    BaseColorId,
+                    color);
+
+                _propertyBlock.SetColor(
+                    ColorId,
+                    color);
+
+                visualRenderer.SetPropertyBlock(
+                    _propertyBlock);
+            }
         }
 
         /// <summary>
@@ -160,6 +242,7 @@ namespace Game.Paint
 
             if (exceededLifeTime || exceededFlightDistance)
             {
+                StopFlightEffect();
                 Destroy(gameObject);
             }
         }
@@ -169,6 +252,7 @@ namespace Game.Paint
         /// </summary>
         private void HandleHit(RaycastHit hit)
         {
+            StopFlightEffect();
             PlayImpactAudio(hit.point);
             SpawnImpactEffect(hit);
 
@@ -203,6 +287,57 @@ namespace Game.Paint
             );
 
             Destroy(gameObject);
+        }
+
+        /// <summary>
+        /// Запускает след как дочерний эффект снаряда после начала его полёта.
+        /// </summary>
+        private void StartFlightEffect()
+        {
+            if (flightEffectCue == null)
+            {
+                return;
+            }
+
+            ResolveParticleEffectService();
+
+            if (particleEffectService == null)
+            {
+                return;
+            }
+
+            _flightEffect =
+                particleEffectService.PlayAttached(
+                    flightEffectCue,
+                    transform);
+        }
+
+        /// <summary>
+        /// Останавливает след и возвращает его экземпляр в пул перед завершением полёта.
+        /// </summary>
+        private void StopFlightEffect()
+        {
+            if (_flightEffect == null)
+            {
+                return;
+            }
+
+            ResolveParticleEffectService();
+
+            if (particleEffectService != null)
+            {
+                particleEffectService.Stop(_flightEffect);
+            }
+
+            _flightEffect = null;
+        }
+
+        /// <summary>
+        /// Останавливает дочерний след при отключении или уничтожении снаряда.
+        /// </summary>
+        private void OnDisable()
+        {
+            StopFlightEffect();
         }
 
         /// <summary>
@@ -250,18 +385,38 @@ namespace Game.Paint
         /// <summary>
         /// Создаёт необязательный эффект столкновения и удаляет его после короткого времени жизни.
         /// </summary>
-        private void SpawnImpactEffect(
+        private bool SpawnImpactEffect(
             RaycastHit hit)
         {
-            if (impactEffectPrefab == null)
-            {
-                return;
-            }
-
             Vector3 normal =
                 hit.normal.sqrMagnitude > 0.0001f
                     ? hit.normal.normalized
                     : Vector3.up;
+
+            if (impactEffectCue != null)
+            {
+                ResolveParticleEffectService();
+
+                if (particleEffectService != null)
+                {
+                    ParticleSystem particleEffect =
+                        particleEffectService.Play(
+                            impactEffectCue,
+                            hit.point,
+                            Quaternion.LookRotation(normal),
+                            _color);
+
+                    if (particleEffect != null)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            if (impactEffectPrefab == null)
+            {
+                return false;
+            }
 
             GameObject effect =
                 Instantiate(
@@ -274,6 +429,28 @@ namespace Game.Paint
                 effect,
                 impactEffectLifetime
             );
+
+            return true;
+        }
+
+        /// <summary>
+        /// Находит ParticleEffectService в родителях или сцене, если он не назначен вручную.
+        /// </summary>
+        private void ResolveParticleEffectService()
+        {
+            if (particleEffectService != null)
+            {
+                return;
+            }
+
+            particleEffectService =
+                GetComponentInParent<ParticleEffectService>();
+
+            if (particleEffectService == null)
+            {
+                particleEffectService =
+                    FindFirstObjectByType<ParticleEffectService>();
+            }
         }
 
         /// <summary>

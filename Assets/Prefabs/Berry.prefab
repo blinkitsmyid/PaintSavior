@@ -161,7 +161,10 @@ MonoBehaviour:
   collisionMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  impactEffectPrefab: {fileID: 0}
+  impactEffectCue: {fileID: 11400000, guid: 452e3c31914cd8f4dbfcc202e80c94fd, type: 2}
+  particleEffectService: {fileID: 0}
+  impactEffectPrefab: {fileID: 2345379690807824202, guid: a4c840563a640ef45b1338d2b9d9d84b, type: 3}
   impactEffectLifetime: 2
+  flightEffectCue: {fileID: 0}
   impactCue: {fileID: 11400000, guid: ef10aaa49d420534ba4ed588d5193e6e, type: 2}
   audioService: {fileID: 0}

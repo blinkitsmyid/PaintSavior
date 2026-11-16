@@ -3,6 +3,7 @@ using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+using Game.Audio;
 using Game.Items;
 using Game.Player;
 
@@ -19,6 +20,12 @@ namespace Game.Paint
         [SerializeField] private Transform projectileSpawnPoint;
         [SerializeField] private PlayerEquipment equipment;
         [SerializeField] private BerryInventory berryInventory;
+
+        [Header("Audio")]
+        [Tooltip("Необязательный звук, который проигрывается при попытке выстрелить без ягод.")]
+        [SerializeField] private AudioCue emptyShotCue;
+        [Tooltip("Общий сервис воспроизведения звуков. Если не задан, ищется один раз при пустом выстреле.")]
+        [SerializeField] private AudioService audioService;
 
         [Header("Temporary Berry Colors")]
         [SerializeField] private Color paintColor = Color.red;
@@ -167,12 +174,15 @@ namespace Game.Paint
                 return;
             }
 
-            if (berryInventory == null ||
-                !berryInventory.HasBerry(
-                    berryInventory.SelectedBerryType
-                ))
+            if (berryInventory == null)
             {
                 return;
+            }
+
+            if (!berryInventory.HasBerry(
+                    berryInventory.SelectedBerryType))
+            {
+                berryInventory.TrySelectFirstAvailableBerry();
             }
 
             _isAiming = true;
@@ -259,6 +269,7 @@ namespace Game.Paint
 
             if (!berryInventory.TryConsumeBerry(berryType))
             {
+                PlayEmptyShotAudio();
                 return false;
             }
 
@@ -280,6 +291,49 @@ namespace Game.Paint
             );
 
             return true;
+        }
+
+        /// <summary>
+        /// Проигрывает необязательный звук пустого выстрела, не создавая снаряд.
+        /// </summary>
+        private void PlayEmptyShotAudio()
+        {
+            if (emptyShotCue == null)
+            {
+                return;
+            }
+
+            ResolveAudioService();
+
+            if (audioService == null)
+            {
+                return;
+            }
+
+            audioService.TryPlay(
+                emptyShotCue,
+                transform.position,
+                transform);
+        }
+
+        /// <summary>
+        /// Находит AudioService в родителях или сцене, если он не назначен вручную.
+        /// </summary>
+        private void ResolveAudioService()
+        {
+            if (audioService != null)
+            {
+                return;
+            }
+
+            audioService =
+                GetComponentInParent<AudioService>();
+
+            if (audioService == null)
+            {
+                audioService =
+                    FindFirstObjectByType<AudioService>();
+            }
         }
 
         /// <summary>

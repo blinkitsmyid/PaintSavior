@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 using Game.Items;
+using Game.Paint;
 
 namespace Game.Player
 {
@@ -14,6 +15,7 @@ namespace Game.Player
         [Header("References")]
         [SerializeField] private BerryInventory inventory;
         [SerializeField] private PlayerEquipment equipment;
+        [SerializeField] private PaintShooter shooter;
 
         private PlayerInputActions _inputActions;
 
@@ -35,6 +37,12 @@ namespace Game.Player
             {
                 equipment =
                     GetComponent<PlayerEquipment>();
+            }
+
+            if (shooter == null)
+            {
+                shooter =
+                    GetComponent<PaintShooter>();
             }
         }
 
@@ -135,21 +143,24 @@ namespace Game.Player
         }
 
         /// <summary>
-        /// Передаёт выбор инвентарю только при наличии рогатки и хотя бы одной ягоды выбранного типа.
+        /// Передаёт выбор инвентарю только во время прицеливания и при наличии ягоды выбранного типа.
         /// </summary>
         private void TrySelectBerry(
             BerryType type)
         {
             if (inventory == null ||
                 equipment == null ||
-                !equipment.IsSlingshotEquipped)
+                !equipment.IsSlingshotEquipped ||
+                shooter == null ||
+                !shooter.IsAiming)
             {
                 Debug.LogWarning(
                     $"{name}: berry selection blocked. " +
                     $"Inventory: {inventory != null}; " +
                     $"Equipment: {equipment != null}; " +
                     $"Slingshot equipped: " +
-                    $"{equipment != null && equipment.IsSlingshotEquipped}."
+                    $"{equipment != null && equipment.IsSlingshotEquipped}; " +
+                    $"Aiming: {shooter != null && shooter.IsAiming}."
                 );
 
                 return;

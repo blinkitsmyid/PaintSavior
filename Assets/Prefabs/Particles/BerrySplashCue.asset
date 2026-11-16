@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4b7a1c93f5d4e0882a6c1b7d9e3f0a5, type: 3}
+  m_Name: BerrySplashCue
+  m_EditorClassIdentifier: Assembly-CSharp::Game.VFX.ParticleEffectCue
+  effectPrefab: {fileID: 1200652868658507884, guid: a4c840563a640ef45b1338d2b9d9d84b, type: 3}
+  duration: 0.8
+  scale: 1
+  colorMode: 1
+  initialPoolSize: 4
+  maxPoolSize: 24
+  designerNotes: 
